@@ -1,10 +1,13 @@
 {
+  "homepage": "https://novabytecorp.github.io/delivery-pro-mobile-cliente-copy-45f7c2aa",
   "name": "base44-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "predeploy":"npm run build",
+    "deploy":"gh-pages -d dist",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
