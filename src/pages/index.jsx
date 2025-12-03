@@ -169,7 +169,7 @@ function PagesContent() {
         <Layout currentPageName={currentPage}>
             <Routes>            
                 
-                    <Route path="/" element={<Menu />} />
+                <Route path="/" element={<ClientDashboard />} />
                 
                 
                 <Route path="/Menu" element={<Menu />} />
