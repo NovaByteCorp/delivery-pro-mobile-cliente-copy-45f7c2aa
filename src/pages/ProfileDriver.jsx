@@ -1,267 +1,62 @@
 import React, { useState } from 'react';
-import { ChevronLeft, MessageCircle, Phone, Mail, HelpCircle, AlertCircle, Package, MapPin, DollarSign, FileText, Send, ChevronRight } from 'lucide-react';
+import { ChevronLeft, Star, TrendingUp, Award, User, Phone, Mail, MapPin, Bike, FileText, Settings, LogOut, ChevronRight, Camera } from 'lucide-react';
 import BottomNavDriver from '../components/driver/DriverBottomNav';
 
-export default function DriverSupportScreen() {
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [showChat, setShowChat] = useState(false);
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'support',
-      text: 'Olá! Como posso ajudá-lo hoje?',
-      time: '14:30'
-    }
-  ]);
+export default function DriverProfileScreen() {
+  const [showEditModal, setShowEditModal] = useState(false);
 
-  const supportCategories = [
+  const driverInfo = {
+    name: 'Michael Johnson',
+    phone: '+258 84 123 4567',
+    email: 'michael.j@email.com',
+    rating: 4.9,
+    totalDeliveries: 1247,
+    memberSince: 'Jan 2024',
+    vehicle: {
+      type: 'Motocicleta',
+      model: 'Honda CB 125',
+      plate: 'MPM-1234'
+    },
+    stats: {
+      acceptance: 98,
+      onTime: 95,
+      completion: 99
+    }
+  };
+
+  const achievements = [
+    { id: 1, title: 'Top Entregador', emoji: '🏆', description: '100 entregas' },
+    { id: 2, title: 'Estrela 5', emoji: '⭐', description: 'Rating 4.8+' },
+    { id: 3, title: 'Rápido', emoji: '⚡', description: '95% no prazo' },
+    { id: 4, title: 'Confiável', emoji: '💎', description: '99% completas' }
+  ];
+
+  const menuItems = [
     {
-      id: 'delivery',
-      icon: Package,
-      title: 'Problemas com Entrega',
-      description: 'Cliente não está, endereço errado, etc.',
-      color: 'orange'
+      icon: User,
+      title: 'Informações Pessoais',
+      subtitle: 'Nome, telefone, email',
+      action: () => setShowEditModal(true)
     },
     {
-      id: 'payment',
-      icon: DollarSign,
-      title: 'Pagamentos',
-      description: 'Dúvidas sobre ganhos, saques',
-      color: 'green'
+      icon: Bike,
+      title: 'Meu Veículo',
+      subtitle: driverInfo.vehicle.model,
+      action: () => {}
     },
     {
-      id: 'app',
-      icon: AlertCircle,
-      title: 'Problemas no App',
-      description: 'Erros, bugs, travamentos',
-      color: 'red'
-    },
-    {
-      id: 'account',
       icon: FileText,
-      title: 'Minha Conta',
-      description: 'Documentos, cadastro, perfil',
-      color: 'blue'
+      title: 'Documentos',
+      subtitle: 'CNH, documentos do veículo',
+      action: () => {}
+    },
+    {
+      icon: Settings,
+      title: 'Configurações',
+      subtitle: 'Notificações, privacidade',
+      action: () => {}
     }
   ];
-
-  const faqs = [
-    {
-      question: 'Como faço para sacar meus ganhos?',
-      answer: 'Você pode solicitar saque na tela de Ganhos. O valor será transferido para sua conta em até 2 dias úteis.'
-    },
-    {
-      question: 'O que fazer se o cliente não atender?',
-      answer: 'Tente ligar 3 vezes. Se não conseguir contato, use o botão "Reportar Problema" na tela do pedido.'
-    },
-    {
-      question: 'Como atualizar meus documentos?',
-      answer: 'Vá em Perfil > Documentos e faça o upload dos novos documentos. A verificação leva até 24h.'
-    },
-    {
-      question: 'Posso recusar um pedido?',
-      answer: 'Sim, mas sua taxa de aceitação pode ser afetada. Mantenha acima de 85% para melhores oportunidades.'
-    }
-  ];
-
-  const emergencyContacts = [
-    {
-      type: 'Emergência',
-      number: '112',
-      icon: '🚨',
-      description: 'Polícia, Ambulância'
-    },
-    {
-      type: 'Suporte 24h',
-      number: '+258 84 000 0000',
-      icon: '📞',
-      description: 'Suporte urgente'
-    }
-  ];
-
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      const newMessage = {
-        id: messages.length + 1,
-        sender: 'user',
-        text: message,
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages([...messages, newMessage]);
-      setMessage('');
-
-      // Simular resposta automática
-      setTimeout(() => {
-        const autoReply = {
-          id: messages.length + 2,
-          sender: 'support',
-          text: 'Obrigado pela sua mensagem. Nossa equipe irá responder em breve.',
-          time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-        };
-        setMessages(prev => [...prev, autoReply]);
-      }, 1000);
-    }
-  };
-
-  const getColorClasses = (color) => {
-    const colors = {
-      orange: 'bg-orange-500',
-      green: 'bg-green-500',
-      red: 'bg-red-500',
-      blue: 'bg-blue-500'
-    };
-    return colors[color] || colors.orange;
-  };
-
-  if (showChat) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="w-full max-w-md h-screen bg-white shadow-2xl overflow-hidden">
-          <div className="relative w-full h-screen bg-white flex flex-col">
-            
-            {/* Header */}
-            <div className="bg-gray-800 px-8 pt-12 pb-6 rounded-b-3xl">
-              <div className="flex items-center justify-between">
-                <button 
-                  onClick={() => setShowChat(false)}
-                  className="w-14 h-14 bg-gray-700 rounded-2xl flex items-center justify-center"
-                >
-                  <ChevronLeft className="w-6 h-6 text-white" />
-                </button>
-                
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
-                    <MessageCircle className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-white">Suporte</h2>
-                    <p className="text-xs text-gray-400">Online agora</p>
-                  </div>
-                </div>
-                
-                <div className="w-14 h-14" />
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-4">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[75%] rounded-3xl px-5 py-3 ${
-                      msg.sender === 'user'
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-gray-50 text-gray-800'
-                    }`}
-                  >
-                    <p className="text-sm">{msg.text}</p>
-                    <p className={`text-xs mt-1 ${
-                      msg.sender === 'user' ? 'text-orange-100' : 'text-gray-400'
-                    }`}>
-                      {msg.time}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Input */}
-            <div className="bg-white border-t border-gray-100 px-8 py-6">
-              <div className="flex items-center space-x-3">
-                <input
-                  type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Digite sua mensagem..."
-                  className="flex-1 bg-gray-50 rounded-2xl px-4 py-3 text-sm text-gray-800 outline-none border-2 border-gray-200 focus:border-orange-500"
-                />
-                <button
-                  onClick={handleSendMessage}
-                  className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg"
-                >
-                  <Send className="w-5 h-5 text-white" />
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (selectedCategory) {
-    const category = supportCategories.find(c => c.id === selectedCategory);
-    
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="w-full max-w-md h-screen bg-white shadow-2xl overflow-hidden">
-          <div className="relative w-full h-screen bg-white overflow-y-auto pb-8">
-            
-            {/* Header */}
-            <div className="bg-gray-800 px-8 pt-12 pb-8 rounded-b-3xl">
-              <div className="flex items-center justify-between mb-6">
-                <button 
-                  onClick={() => setSelectedCategory(null)}
-                  className="w-14 h-14 bg-gray-700 rounded-2xl flex items-center justify-center"
-                >
-                  <ChevronLeft className="w-6 h-6 text-white" />
-                </button>
-                
-                <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'serif' }}>
-                  {category.title}
-                </h1>
-                
-                <div className="w-14 h-14" />
-              </div>
-            </div>
-
-            <div className="px-8 mt-6">
-              {/* Quick Actions */}
-              <div className="bg-gray-50 rounded-3xl p-5 mb-6 shadow-sm">
-                <h3 className="text-base font-bold text-gray-800 mb-4">Ações Rápidas</h3>
-                
-                <div className="space-y-3">
-                  <button 
-                    onClick={() => setShowChat(true)}
-                    className="w-full bg-white rounded-2xl p-4 flex items-center space-x-3 shadow-sm border-2 border-gray-200"
-                  >
-                    <MessageCircle className="w-5 h-5 text-orange-500" />
-                    <span className="text-sm font-bold text-gray-800">Chat com Suporte</span>
-                  </button>
-                  
-                  <button className="w-full bg-white rounded-2xl p-4 flex items-center space-x-3 shadow-sm border-2 border-gray-200">
-                    <Phone className="w-5 h-5 text-green-500" />
-                    <span className="text-sm font-bold text-gray-800">Ligar para Suporte</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Related FAQs */}
-              <h3 className="text-lg font-bold text-gray-800 mb-4" style={{ fontFamily: 'serif' }}>
-                Perguntas Frequentes
-              </h3>
-              
-              <div className="space-y-3">
-                {faqs.slice(0, 2).map((faq, idx) => (
-                  <div key={idx} className="bg-gray-50 rounded-3xl p-5 shadow-sm">
-                    <h4 className="text-sm font-bold text-gray-800 mb-2">{faq.question}</h4>
-                    <p className="text-sm text-gray-600 leading-relaxed">{faq.answer}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -269,134 +64,237 @@ export default function DriverSupportScreen() {
         <div className="relative w-full h-screen bg-white overflow-y-auto pb-8">
           
           {/* Header */}
-          <div className="bg-gray-800 px-8 pt-12 pb-8 rounded-b-3xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-gray-800 px-8 pt-12 pb-20 rounded-b-3xl">
+            <div className="flex items-center justify-between mb-8">
               <button className="w-14 h-14 bg-gray-700 rounded-2xl flex items-center justify-center">
                 <ChevronLeft className="w-6 h-6 text-white" />
               </button>
               
               <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'serif' }}>
-                Central de Ajuda
+                Meu Perfil
               </h1>
               
               <div className="w-14 h-14" />
             </div>
 
-            {/* Quick Contact */}
-            <button 
-              onClick={() => setShowChat(true)}
-              className="w-full bg-orange-500 rounded-2xl p-4 flex items-center justify-center space-x-3 shadow-lg"
-            >
-              <MessageCircle className="w-6 h-6 text-white" />
-              <span className="text-base font-bold text-white">Chat com Suporte</span>
+            {/* Profile Picture */}
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <div className="w-28 h-28 bg-gray-700 rounded-full flex items-center justify-center">
+                  <span className="text-5xl">👨‍🍳</span>
+                </div>
+                <button className="absolute bottom-0 right-0 w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                  <Camera className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Name and Rating */}
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'serif' }}>
+                {driverInfo.name}
+              </h2>
+              <div className="flex items-center justify-center space-x-2 mb-1">
+                <Star className="w-5 h-5 fill-orange-500 text-orange-500" />
+                <span className="text-lg font-bold text-white">{driverInfo.rating}</span>
+                <span className="text-sm text-gray-400">({driverInfo.totalDeliveries} entregas)</span>
+              </div>
+              <p className="text-sm text-gray-400">Membro desde {driverInfo.memberSince}</p>
+            </div>
+          </div>
+
+          {/* Stats Card - Overlapping */}
+          <div className="relative px-8 -mt-12 mb-6">
+            <div className="bg-white rounded-3xl p-6 shadow-2xl">
+              <h3 className="text-base font-bold text-gray-800 mb-4 text-center">Estatísticas de Performance</h3>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                    <TrendingUp className="w-7 h-7 text-green-500" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-800 mb-1">{driverInfo.stats.acceptance}%</p>
+                  <p className="text-xs text-gray-400">Aceitação</p>
+                </div>
+
+                <div className="text-center">
+                  <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                    <TrendingUp className="w-7 h-7 text-blue-500" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-800 mb-1">{driverInfo.stats.onTime}%</p>
+                  <p className="text-xs text-gray-400">No Prazo</p>
+                </div>
+
+                <div className="text-center">
+                  <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                    <Award className="w-7 h-7 text-orange-500" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-800 mb-1">{driverInfo.stats.completion}%</p>
+                  <p className="text-xs text-gray-400">Completas</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Achievements */}
+          <div className="px-8 mb-6">
+            <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
+              Conquistas
+            </h2>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {achievements.map((achievement) => (
+                <div key={achievement.id} className="bg-gray-50 rounded-3xl p-4 shadow-sm text-center">
+                  <span className="text-4xl mb-2 block">{achievement.emoji}</span>
+                  <h3 className="text-sm font-bold text-gray-800 mb-1">{achievement.title}</h3>
+                  <p className="text-xs text-gray-400">{achievement.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Account Info */}
+          <div className="px-8 mb-6">
+            <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
+              Informações da Conta
+            </h2>
+            
+            <div className="bg-gray-50 rounded-3xl p-5 shadow-sm space-y-4">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Phone className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-gray-400 mb-1">Telefone</p>
+                  <p className="text-sm font-bold text-gray-800">{driverInfo.phone}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Mail className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-gray-400 mb-1">Email</p>
+                  <p className="text-sm font-bold text-gray-800">{driverInfo.email}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Bike className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-gray-400 mb-1">Veículo</p>
+                  <p className="text-sm font-bold text-gray-800">{driverInfo.vehicle.model}</p>
+                  <p className="text-xs text-gray-400">{driverInfo.vehicle.plate}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Menu Items */}
+          <div className="px-8 mb-6">
+            <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
+              Configurações
+            </h2>
+            
+            <div className="space-y-3">
+              {menuItems.map((item, idx) => (
+                <button
+                  key={idx}
+                  onClick={item.action}
+                  className="w-full bg-gray-50 rounded-2xl p-5 flex items-center space-x-4 shadow-sm"
+                >
+                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow flex-shrink-0">
+                    <item.icon className="w-6 h-6 text-gray-800" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h3 className="text-base font-bold text-gray-800">{item.title}</h3>
+                    <p className="text-xs text-gray-400">{item.subtitle}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Logout */}
+          <div className="px-8 mb-6">
+            <button className="w-full bg-gray-50 rounded-2xl p-5 flex items-center justify-center space-x-3 shadow-sm">
+              <LogOut className="w-5 h-5 text-gray-800" />
+              <span className="text-base font-bold text-gray-800">Sair da Conta</span>
             </button>
           </div>
 
-          <div className="px-8 mt-6">
-            
-            {/* Emergency Contacts */}
-            <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
-              Contatos de Emergência
-            </h2>
-            
-            <div className="space-y-3 mb-6">
-              {emergencyContacts.map((contact, idx) => (
-                <button
-                  key={idx}
-                  className="w-full bg-gray-800 rounded-3xl p-5 flex items-center space-x-4 shadow-lg"
-                >
-                  <div className="w-14 h-14 bg-gray-700 rounded-xl flex items-center justify-center">
-                    <span className="text-3xl">{contact.icon}</span>
-                  </div>
-                  <div className="flex-1 text-left">
-                    <h3 className="text-base font-bold text-white mb-1">{contact.type}</h3>
-                    <p className="text-sm text-gray-400 mb-1">{contact.description}</p>
-                    <p className="text-lg font-bold text-orange-500">{contact.number}</p>
-                  </div>
-                  <Phone className="w-5 h-5 text-white" />
-                </button>
-              ))}
-            </div>
-
-            {/* Support Categories */}
-            <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
-              Como Podemos Ajudar?
-            </h2>
-            
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {supportCategories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className="bg-gray-50 rounded-3xl p-5 shadow-sm text-center"
-                >
-                  <div className={`w-14 h-14 ${getColorClasses(category.color)} rounded-2xl flex items-center justify-center mx-auto mb-3`}>
-                    <category.icon className="w-7 h-7 text-white" />
-                  </div>
-                  <h3 className="text-sm font-bold text-gray-800 mb-2">{category.title}</h3>
-                  <p className="text-xs text-gray-400 leading-relaxed">{category.description}</p>
-                </button>
-              ))}
-            </div>
-
-            {/* FAQs */}
-            <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
-              Perguntas Frequentes
-            </h2>
-            
-            <div className="space-y-3 mb-6">
-              {faqs.map((faq, idx) => (
-                <button
-                  key={idx}
-                  className="w-full bg-gray-50 rounded-3xl p-5 shadow-sm text-left"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 pr-4">
-                      <h3 className="text-sm font-bold text-gray-800 mb-2">{faq.question}</h3>
-                      <p className="text-sm text-gray-600 leading-relaxed">{faq.answer}</p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {/* Other Contacts */}
-            <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
-              Outros Contatos
-            </h2>
-            
-            <div className="space-y-3 mb-6">
-              <button className="w-full bg-gray-50 rounded-2xl p-5 flex items-center space-x-4 shadow-sm">
-                <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center">
-                  <Phone className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="text-base font-bold text-gray-800">Telefone</h3>
-                  <p className="text-sm text-gray-400">+258 84 000 0000</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-400" />
-              </button>
-
-              <button className="w-full bg-gray-50 rounded-2xl p-5 flex items-center space-x-4 shadow-sm">
-                <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center">
-                  <Mail className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1 text-left">
-                  <h3 className="text-base font-bold text-gray-800">Email</h3>
-                  <p className="text-sm text-gray-400">suporte@fooddelivery.com</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-
+          {/* Version */}
+          <div className="text-center pb-8">
+            <p className="text-xs text-gray-400">Versão 1.0.0</p>
           </div>
 
-        </div>
+          {/* Edit Modal */}
+          {showEditModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-8">
+              <div className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[80vh] overflow-y-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-gray-800" style={{ fontFamily: 'serif' }}>
+                    Editar Perfil
+                  </h3>
+                  <button 
+                    onClick={() => setShowEditModal(false)}
+                    className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center"
+                  >
+                    <span className="text-gray-800 text-lg">×</span>
+                  </button>
+                </div>
 
-         {/* FUTURO: BottomNavDriver */}
-      {<BottomNavDriver activePage="ProfileDriver" /> }
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 mb-2 block">NOME COMPLETO</label>
+                    <input
+                      type="text"
+                      defaultValue={driverInfo.name}
+                      className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm text-gray-800 outline-none border-2 border-gray-200 focus:border-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 mb-2 block">TELEFONE</label>
+                    <input
+                      type="tel"
+                      defaultValue={driverInfo.phone}
+                      className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm text-gray-800 outline-none border-2 border-gray-200 focus:border-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 mb-2 block">EMAIL</label>
+                    <input
+                      type="email"
+                      defaultValue={driverInfo.email}
+                      className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm text-gray-800 outline-none border-2 border-gray-200 focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex space-x-3 mt-6">
+                  <button 
+                    onClick={() => setShowEditModal(false)}
+                    className="flex-1 bg-gray-200 text-gray-800 font-bold py-4 rounded-2xl"
+                  >
+                    Cancelar
+                  </button>
+                  <button className="flex-1 bg-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg">
+                    Salvar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
+      <BottomNavDriver activePage="ProfileDriver" />
     </div>
   );
 }

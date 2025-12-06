@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, DollarSign, TrendingUp, Calendar, Download, ChevronRight, Package, Clock, Star } from 'lucide-react';
+import BottomNavDriver from '../components/driver/DriverBottomNav';
+
 
 export default function DriverEarningsScreen() {
   const [selectedPeriod, setSelectedPeriod] = useState('today');
@@ -78,7 +80,7 @@ export default function DriverEarningsScreen() {
   const currentEarnings = earnings[selectedPeriod];
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen pb-20 bg-gray-100">
       <div className="w-full max-w-md h-screen bg-white shadow-2xl overflow-hidden">
         <div className="relative w-full h-screen bg-white overflow-y-auto pb-8">
           
@@ -286,6 +288,9 @@ export default function DriverEarningsScreen() {
               <ChevronRight className="w-5 h-5 text-gray-400" />
             </button>
           </div>
+
+               {/* FUTURO: BottomNavDriver */}
+              {<BottomNavDriver activePage="DriverEarnings" /> }
 
         </div>
       </div>

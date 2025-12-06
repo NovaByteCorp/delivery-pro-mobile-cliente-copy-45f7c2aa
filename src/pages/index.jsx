@@ -76,6 +76,18 @@ import DriverEarnings from "./DriverEarnings";
 
 /* Driver */
 
+/* RestaurantOwner */
+
+import RestaurantOwnerDashboard from "./RODashboard";
+
+import RestaurantOwnerMenu from "./ROMenu";
+
+import RestaurantOwnerOrders from "./ROOrders";
+
+import RestaurantOwnerStats from "./ROStats";
+
+/* RestaurantOwner */
+
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
@@ -243,6 +255,14 @@ function PagesContent() {
                 <Route path="/DriverHistory" element={<DriverHistory />} />
 
                 <Route path="/DriverEarnings" element={<DriverEarnings />} />
+
+                <Route path="/RestaurantOwnerDashboard" element={<RestaurantOwnerDashboard />} />
+
+                <Route path="/RestaurantOwnerMenu" element={<RestaurantOwnerMenu />} />
+
+                <Route path="/RestaurantOwnerOrders" element={<RestaurantOwnerOrders />} />
+
+                <Route path="/RestaurantOwnerStats" element={<RestaurantOwnerStats />} />
                 
             </Routes>
         </Layout>

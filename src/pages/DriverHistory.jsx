@@ -130,8 +130,8 @@ export default function DriverHistoryScreen() {
   if (selectedDelivery) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="w-full max-w-md h-screen bg-white shadow-2xl overflow-hidden">
-          <div className="relative w-full h-screen bg-white overflow-y-auto pb-24">
+        <div className="w-full max-w-md min-h-screen bg-white shadow-2xl">
+          <div className="relative w-full bg-white pb-24">
             
             {/* Header */}
             <div className="bg-gray-800 px-8 pt-12 pb-8 rounded-b-3xl">
@@ -254,7 +254,7 @@ export default function DriverHistoryScreen() {
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-3 mb-8">
                 <div className="bg-gray-50 rounded-2xl p-4 text-center">
                   <MapPin className="w-5 h-5 text-orange-500 mx-auto mb-2" />
                   <p className="text-xs text-gray-400 mb-1">Distância</p>
@@ -275,21 +275,19 @@ export default function DriverHistoryScreen() {
             </div>
 
           </div>
+          <BottomNavDriver activePage="DriverHistory" />
         </div>
-
-        {/* FUTURO: BottomNavDriver */}
-      {<BottomNavDriver activePage="DriverHistory" /> }
       </div>
     );
   }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md h-screen bg-white shadow-2xl overflow-hidden">
-        <div className="relative w-full h-screen bg-white overflow-y-auto pb-8">
+      <div className="w-full max-w-md min-h-screen bg-white shadow-2xl">
+        <div className="relative w-full bg-white pb-24">
           
           {/* Header */}
-          <div className="fixed top-0 left-0 right-0 bg-white z-10 px-8 pt-12 pb-4 shadow-sm">
+          <div className="sticky top-0 bg-white z-10 px-8 pt-12 pb-4 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <button className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center">
                 <ChevronLeft className="w-6 h-6 text-gray-800" />
@@ -360,7 +358,7 @@ export default function DriverHistoryScreen() {
           </div>
 
           {/* Content */}
-          <div className="mt-72 px-8">
+          <div className="px-8 mt-6">
             
             {/* Summary Card */}
             <div className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-lg">
@@ -374,7 +372,7 @@ export default function DriverHistoryScreen() {
             </div>
 
             {/* Deliveries List */}
-            <div className="space-y-4">
+            <div className="space-y-4 mb-8">
               {filteredDeliveries.map((delivery) => (
                 <div 
                   key={delivery.id}
@@ -428,10 +426,8 @@ export default function DriverHistoryScreen() {
 
           </div>
 
-        {/* FUTURO: BottomNavDriver */}
-        {<BottomNavDriver activePage="DriverHistory" /> } 
-
         </div>
+        <BottomNavDriver activePage="DriverHistory" />
       </div>     
     </div>
   );
