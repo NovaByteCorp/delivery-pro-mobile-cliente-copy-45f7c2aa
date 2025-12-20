@@ -25,6 +25,7 @@ export default function Welcome() {
   };
 
   const handleLogin = async (e) => {
+<<<<<<< HEAD
   e.preventDefault();
   setError('');
   setLoading(true);
@@ -105,6 +106,81 @@ const handleSignup = async (e) => {
     setLoading(false);
   }
 };
+=======
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const allUsers = await User.list();
+      const user = allUsers.find(
+        (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+      );
+
+      if (user) {
+        localStorage.setItem('simulatedRole', user.user_type);
+        localStorage.setItem('testUser', JSON.stringify(user));
+
+        if (user.user_type === 'cliente') {
+          navigate(createPageUrl('ClientDashboard'));
+        } else {
+          navigate(createPageUrl('Dashboard'));
+        }
+      } else {
+        setError('Email ou senha inválidos.');
+      }
+    } catch (err) {
+      console.error("Erro no login:", err);
+      setError('Ocorreu um erro. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    if (password.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const allUsers = await User.list();
+      const existingUser = allUsers.find(
+        (u) => u.email.toLowerCase() === email.toLowerCase()
+      );
+
+      if (existingUser) {
+        setError('Este email já está cadastrado.');
+        setLoading(false);
+        return;
+      }
+      
+      const newUser = await User.create({
+        full_name: fullName,
+        email: email,
+        phone: phone,
+        password: password,
+        user_type: "cliente",
+        is_active: true
+      });
+
+      localStorage.setItem('simulatedRole', 'cliente');
+      localStorage.setItem('testUser', JSON.stringify(newUser));
+      navigate(createPageUrl('ClientDashboard'));
+    } catch (err) {
+      console.error("Erro no cadastro:", err);
+      setError('Ocorreu um erro ao criar a conta. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+>>>>>>> 57df1d205f02b3b7e09178591f9fe582a2e3f2b8
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
