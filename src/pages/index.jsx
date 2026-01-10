@@ -86,6 +86,8 @@ import RestaurantOwnerOrders from "./ROOrders";
 
 import RestaurantOwnerStats from "./ROStats";
 
+import RestaurantOwnerProfile from "./ROProfile";
+
 /* RestaurantOwner */
 
 
@@ -263,6 +265,8 @@ function PagesContent() {
                 <Route path="/RestaurantOwnerOrders" element={<RestaurantOwnerOrders />} />
 
                 <Route path="/RestaurantOwnerStats" element={<RestaurantOwnerStats />} />
+
+                <Route path="/RestaurantOwnerProfile" element={<RestaurantOwnerProfile />} />
                 
             </Routes>
         </Layout>

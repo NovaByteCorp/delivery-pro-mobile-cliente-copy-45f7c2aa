@@ -1,5 +1,5 @@
 import React from "react";
-import { Package, Clock, DollarSign, TrendingUp, DollarSignIcon, HistoryIcon } from "lucide-react";
+import { Package, Clock, DollarSign, User, DollarSignIcon, HistoryIcon, TrendingUp } from "lucide-react";
 import { createPageUrl } from "@/utils";
 
 export default function BottomNav({ activePage }) {
@@ -50,6 +50,16 @@ export default function BottomNav({ activePage }) {
             </div>
           ) : (
             <TrendingUp className="w-6 h-6 text-gray-800" />
+          )}
+        </button>
+
+        <button onClick={() => navigate(createPageUrl('RestaurantOwnerProfile'))}>
+          {activePage === 'RestaurantOwnerProfile' ? (
+            <div className="w-9 h-9 bg-[#ff4700] rounded-full flex items-center justify-center shadow-lg">
+              <User className="w-5 h-5 text-white" />
+            </div>
+          ) : (
+            <User className="w-6 h-6 text-gray-800" />
           )}
         </button>
       </div>
