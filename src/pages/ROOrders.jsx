@@ -1,18 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Clock, Package, User, MapPin, Phone, CheckCircle, XCircle, ChefHat, Bike, DollarSign, TrendingUp, Settings, Loader2, Star } from 'lucide-react';
 import { supabase } from '@/supabase';
-
-// Mock BottomNav component
-const BottomNavRO = ({ activePage }) => (
-  <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 max-w-md mx-auto">
-    <div className="flex justify-around py-3">
-      <button className={`flex flex-col items-center ${activePage === 'RestaurantOwnerOrders' ? 'text-orange-500' : 'text-gray-400'}`}>
-        <Package className="w-6 h-6" />
-        <span className="text-xs mt-1">Pedidos</span>
-      </button>
-    </div>
-  </div>
-);
+import BottomNavRO from '../components/restaurants/ROBottomNav';
 
 export default function RestaurantOwnerOrders() {
   const [selectedTab, setSelectedTab] = useState('new');
