@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Settings, DollarSign, Package, Clock, TrendingUp, Star, AlertCircle, ChevronRight } from 'lucide-react';
 import BottomNavRO from '../components/restaurants/ROBottomNav';
-import { Order, Restaurant, Product, User } from '@/api/entities';
+import { supabase } from '@/supabase';
 
 export default function RestaurantOwnerDashboard() {
   const [isOpen, setIsOpen] = useState(true);
@@ -20,6 +20,10 @@ export default function RestaurantOwnerDashboard() {
 
   useEffect(() => {
     loadDashboardData();
+    
+    // Atualizar a cada 30 segundos
+    const interval = setInterval(loadDashboardData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadDashboardData = async () => {
@@ -34,16 +38,25 @@ export default function RestaurantOwnerDashboard() {
         return;
       }
 
-      // Buscar restaurante usando assigned_restaurant_id do usuário
+      // Buscar restaurante do Supabase
       let userRestaurant = null;
       
       if (testUser.assigned_restaurant_id) {
-        // Usuário tem restaurante atribuído diretamente
-        userRestaurant = await Restaurant.get(testUser.assigned_restaurant_id);
+        const { data, error } = await supabase
+          .from('Restaurant')
+          .select('*')
+          .eq('id', testUser.assigned_restaurant_id)
+          .single();
+        
+        if (!error) userRestaurant = data;
       } else {
-        // Buscar por owner_id (caso exista esse campo)
-        const allRestaurants = await Restaurant.list();
-        userRestaurant = allRestaurants.find(r => r.owner_id === testUser.id);
+        const { data, error } = await supabase
+          .from('Restaurant')
+          .select('*')
+          .eq('owner_id', testUser.id)
+          .single();
+        
+        if (!error) userRestaurant = data;
       }
 
       if (!userRestaurant) {
@@ -55,19 +68,34 @@ export default function RestaurantOwnerDashboard() {
       setRestaurant(userRestaurant);
       setIsOpen(userRestaurant.is_active !== false);
 
-      // Buscar todos os pedidos do restaurante
-      const allOrders = await Order.list();
-      const restaurantOrders = allOrders.filter(o => o.restaurant_id === userRestaurant.id);
+      // Buscar pedidos do restaurante
+      const { data: allOrders, error: ordersError } = await supabase
+        .from('Order')
+        .select('*')
+        .eq('restaurant_id', userRestaurant.id)
+        .order('created_date', { ascending: false });
+
+      if (ordersError) {
+        console.error('Erro ao buscar pedidos:', ordersError);
+        setLoading(false);
+        return;
+      }
+
+      console.log('📦 Pedidos encontrados:', allOrders?.length || 0);
+
+      const restaurantOrders = allOrders || [];
 
       // Filtrar pedidos de hoje
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
       const todayOrders = restaurantOrders.filter(order => {
-        const orderDate = new Date(order.created_date || order.created_at);
+        const orderDate = new Date(order.created_date);
         orderDate.setHours(0, 0, 0, 0);
         return orderDate.getTime() === today.getTime();
       });
+
+      console.log('📅 Pedidos de hoje:', todayOrders.length);
 
       // Calcular estatísticas de hoje
       const deliveredToday = todayOrders.filter(o => 
@@ -81,7 +109,7 @@ export default function RestaurantOwnerDashboard() {
       const avgTicket = deliveredToday.length > 0 ? totalRevenue / deliveredToday.length : 0;
 
       // Tempo médio de preparo do restaurante
-      const avgPrepTime = userRestaurant.avg_preparation_time || 20;
+      const avgPrepTime = userRestaurant.avg_preparation_time || userRestaurant.preparation_time || 30;
 
       setTodayStats({
         revenue: totalRevenue,
@@ -91,8 +119,23 @@ export default function RestaurantOwnerDashboard() {
         prepTime: avgPrepTime
       });
 
+      // Buscar itens dos pedidos para contar quantidade
+      const ordersWithItems = await Promise.all(
+        restaurantOrders.map(async (order) => {
+          const { data: items } = await supabase
+            .from('OrderItem')
+            .select('*')
+            .eq('order_id', order.id);
+          
+          return {
+            ...order,
+            items_count: items?.length || 0
+          };
+        })
+      );
+
       // Pedidos pendentes (novos/aguardando confirmação)
-      const pending = restaurantOrders
+      const pending = ordersWithItems
         .filter(o => {
           const status = (o.status || '').toLowerCase();
           return status === 'pendente' || 
@@ -101,22 +144,22 @@ export default function RestaurantOwnerDashboard() {
                  status === 'new' ||
                  status === 'aguardando';
         })
-        .sort((a, b) => new Date(b.created_date || b.created_at) - new Date(a.created_date || a.created_at))
         .slice(0, 5)
         .map(order => ({
           id: order.id,
-          orderId: order.order_number || `ORD-${order.id.slice(0, 4).toUpperCase()}`,
+          orderId: order.order_number || `#${order.id.slice(0, 6).toUpperCase()}`,
           customer: order.customer_name || 'Cliente',
           items: order.items_count || 1,
           total: parseFloat(order.total_amount) || 0,
-          time: getTimeAgo(order.created_date || order.created_at),
+          time: getTimeAgo(order.created_date),
           status: 'new'
         }));
 
       setPendingOrders(pending);
+      console.log('⏳ Pedidos pendentes:', pending.length);
 
       // Pedidos em preparação/confirmados
-      const preparing = restaurantOrders
+      const preparing = ordersWithItems
         .filter(o => {
           const status = (o.status || '').toLowerCase();
           return status === 'preparando' || 
@@ -126,98 +169,72 @@ export default function RestaurantOwnerDashboard() {
                  status === 'em preparação' ||
                  status === 'em preparacao';
         })
-        .sort((a, b) => new Date(b.created_date || b.created_at) - new Date(a.created_date || a.created_at))
         .slice(0, 5)
         .map(order => {
-          const prepStarted = new Date(order.prep_started_at || order.confirmed_at || order.created_at || order.created_date);
+          const prepStarted = new Date(order.prep_started_at || order.confirmed_at || order.created_date);
           const now = new Date();
           const timeElapsed = Math.floor((now - prepStarted) / (1000 * 60)); // minutos
           
           return {
             id: order.id,
-            orderId: order.order_number || `ORD-${order.id.slice(0, 4).toUpperCase()}`,
+            orderId: order.order_number || `#${order.id.slice(0, 6).toUpperCase()}`,
             customer: order.customer_name || 'Cliente',
             items: order.items_count || 1,
             total: parseFloat(order.total_amount) || 0,
             timeElapsed: Math.max(0, timeElapsed),
-            estimatedTime: order.estimated_prep_time || parseInt(userRestaurant.preparation_time) || 20
+            estimatedTime: order.estimated_prep_time || avgPrepTime
           };
         });
 
       setPreparingOrders(preparing);
+      console.log('🔥 Pedidos em preparação:', preparing.length);
 
-      // Produtos mais vendidos do restaurante
-      const allProducts = await Product.list();
-      const restaurantProducts = allProducts.filter(p => 
-        p.restaurant_id === userRestaurant.id && 
-        p.is_available !== false
-      );
+      // Buscar produtos mais vendidos
+      const { data: allProducts } = await supabase
+        .from('Product')
+        .select('*')
+        .eq('restaurant_id', userRestaurant.id)
+        .eq('is_available', true);
 
-      if (restaurantProducts.length > 0) {
-        // Contar vendas por produto baseado em pedidos
-        const productSalesMap = {};
+      if (allProducts && allProducts.length > 0) {
+        // Buscar itens de pedidos entregues
+        const deliveredOrderIds = deliveredToday.map(o => o.id);
+        
+        if (deliveredOrderIds.length > 0) {
+          const { data: soldItems } = await supabase
+            .from('OrderItem')
+            .select('product_id, product_name, quantity, subtotal')
+            .in('order_id', deliveredOrderIds);
 
-        // Inicializar todos os produtos
-        restaurantProducts.forEach(product => {
-          productSalesMap[product.id] = {
-            name: product.name,
-            sales: 0,
-            revenue: 0,
-            price: parseFloat(product.price) || 0
-          };
-        });
-
-        // Contar vendas dos pedidos entregues
-        const deliveredOrders = restaurantOrders.filter(o => {
-          const status = (o.status || '').toLowerCase();
-          return status === 'entregue' || 
-                 status === 'delivered' || 
-                 status === 'concluído' ||
-                 status === 'concluido';
-        });
-
-        if (deliveredOrders.length > 0 && restaurantProducts.length > 0) {
-          // Distribuir vendas de forma proporcional aos produtos
-          // Produtos com menor preço tendem a vender mais
-          const totalOrders = deliveredOrders.length;
-          
-          restaurantProducts.forEach(product => {
-            const price = parseFloat(product.price) || 0;
+          if (soldItems && soldItems.length > 0) {
+            // Agrupar vendas por produto
+            const productSalesMap = {};
             
-            // Fator baseado no preço (produtos mais baratos vendem mais)
-            let priceMultiplier = 1.0;
-            if (price < 50) {
-              priceMultiplier = 1.8;
-            } else if (price < 100) {
-              priceMultiplier = 1.3;
-            } else if (price < 200) {
-              priceMultiplier = 1.0;
-            } else {
-              priceMultiplier = 0.6;
-            }
-            
-            // Adicionar variação aleatória para tornar mais realista
-            const randomFactor = 0.7 + Math.random() * 0.6; // 0.7 a 1.3
-            
-            const baseSales = Math.floor(totalOrders * 0.3); // 30% dos pedidos em média
-            const sales = Math.max(1, Math.floor(baseSales * priceMultiplier * randomFactor));
-            const revenue = sales * price;
+            soldItems.forEach(item => {
+              const key = item.product_id || item.product_name;
+              if (!productSalesMap[key]) {
+                productSalesMap[key] = {
+                  name: item.product_name,
+                  sales: 0,
+                  revenue: 0
+                };
+              }
+              productSalesMap[key].sales += item.quantity;
+              productSalesMap[key].revenue += parseFloat(item.subtotal) || 0;
+            });
 
-            productSalesMap[product.id] = {
-              name: product.name,
-              sales: sales,
-              revenue: revenue
-            };
-          });
+            // Converter para array e pegar top 3
+            const topThree = Object.values(productSalesMap)
+              .sort((a, b) => b.revenue - a.revenue)
+              .slice(0, 3);
+
+            setTopProducts(topThree);
+          } else {
+            setTopProducts([]);
+          }
+        } else {
+          setTopProducts([]);
         }
-
-        // Converter para array e ordenar por receita
-        const productSales = Object.values(productSalesMap);
-        const topThree = productSales
-          .sort((a, b) => b.revenue - a.revenue)
-          .slice(0, 3);
-
-        setTopProducts(topThree);
       } else {
         setTopProducts([]);
       }
@@ -256,69 +273,74 @@ export default function RestaurantOwnerDashboard() {
     
     try {
       const newStatus = !isOpen;
-      await Restaurant.update(restaurant.id, { is_active: newStatus });
-      setIsOpen(newStatus);
       
-      // Toast de sucesso
-      const toast = document.createElement('div');
-      toast.className = 'fixed top-20 left-4 right-4 z-[60] flex justify-center';
-      toast.innerHTML = `
-        <div class="bg-emerald-500 text-white rounded-2xl shadow-2xl p-4 max-w-md w-full">
-          <p class="font-bold text-center">Restaurante ${newStatus ? 'Aberto' : 'Fechado'}!</p>
-        </div>
-      `;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2000);
+      const { error } = await supabase
+        .from('Restaurant')
+        .update({ is_active: newStatus })
+        .eq('id', restaurant.id);
+
+      if (error) throw error;
+
+      setIsOpen(newStatus);
+      showToast(`Restaurante ${newStatus ? 'Aberto' : 'Fechado'}!`, 'success');
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
-      
-      // Toast de erro
-      const toast = document.createElement('div');
-      toast.className = 'fixed top-20 left-4 right-4 z-[60] flex justify-center';
-      toast.innerHTML = `
-        <div class="bg-red-500 text-white rounded-2xl shadow-2xl p-4 max-w-md w-full">
-          <p class="font-bold text-center">Erro ao atualizar status</p>
-        </div>
-      `;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2000);
+      showToast('Erro ao atualizar status', 'error');
+    }
+  };
+
+  const handleConfirmOrder = async (orderId) => {
+    try {
+      const { error } = await supabase
+        .from('Order')
+        .update({ 
+          status: 'preparando',
+          confirmed_at: new Date().toISOString(),
+          prep_started_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      await loadDashboardData();
+      showToast('Pedido confirmado e em preparação!', 'success');
+    } catch (error) {
+      console.error('Erro ao confirmar pedido:', error);
+      showToast('Erro ao confirmar pedido', 'error');
     }
   };
 
   const handleMarkAsReady = async (orderId) => {
     try {
-      await Order.update(orderId, { 
-        status: 'pronto',
-        ready_at: new Date().toISOString()
-      });
-      
-      // Recarregar dados
+      const { error } = await supabase
+        .from('Order')
+        .update({ 
+          status: 'pronto',
+          ready_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
       await loadDashboardData();
-      
-      // Toast de sucesso
-      const toast = document.createElement('div');
-      toast.className = 'fixed top-20 left-4 right-4 z-[60] flex justify-center';
-      toast.innerHTML = `
-        <div class="bg-emerald-500 text-white rounded-2xl shadow-2xl p-4 max-w-md w-full">
-          <p class="font-bold text-center">Pedido marcado como pronto!</p>
-        </div>
-      `;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2000);
+      showToast('Pedido marcado como pronto!', 'success');
     } catch (error) {
       console.error('Erro ao marcar pedido como pronto:', error);
-      
-      // Toast de erro
-      const toast = document.createElement('div');
-      toast.className = 'fixed top-20 left-4 right-4 z-[60] flex justify-center';
-      toast.innerHTML = `
-        <div class="bg-red-500 text-white rounded-2xl shadow-2xl p-4 max-w-md w-full">
-          <p class="font-bold text-center">Erro ao atualizar pedido</p>
-        </div>
-      `;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2000);
+      showToast('Erro ao atualizar pedido', 'error');
     }
+  };
+
+  const showToast = (message, type = 'success') => {
+    const bgColor = type === 'success' ? 'bg-emerald-500' : 'bg-red-500';
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-20 left-4 right-4 z-[60] flex justify-center';
+    toast.innerHTML = `
+      <div class="${bgColor} text-white rounded-2xl shadow-2xl p-4 max-w-md w-full">
+        <p class="font-bold text-center">${message}</p>
+      </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
   };
 
   if (loading) {
@@ -443,18 +465,40 @@ export default function RestaurantOwnerDashboard() {
           {/* Pending Orders Alert */}
           {pendingOrders.length > 0 && (
             <div className="px-8 mb-6">
-              <div className="bg-orange-500 rounded-3xl p-5 shadow-lg">
+              <div className="bg-orange-500 rounded-3xl p-5 shadow-lg mb-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-3">
                     <AlertCircle className="w-6 h-6 text-white" />
-                    <h3 className="text-lg font-bold text-white">Pedidos Pendentes</h3>
+                    <h3 className="text-lg font-bold text-white">Novos Pedidos</h3>
                   </div>
                   <span className="text-2xl font-bold text-white">{pendingOrders.length}</span>
                 </div>
-                <p className="text-sm text-orange-100 mb-4">Aguardando sua confirmação</p>
-                <button className="w-full bg-white text-orange-500 font-bold py-3 rounded-2xl hover:bg-gray-50 transition-colors">
-                  Ver Pedidos
-                </button>
+                <p className="text-sm text-orange-100 mb-3">Aguardando sua confirmação</p>
+              </div>
+
+              {/* Lista de pedidos pendentes */}
+              <div className="space-y-3">
+                {pendingOrders.map((order) => (
+                  <div key={order.id} className="bg-orange-50 border-2 border-orange-200 rounded-3xl p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h3 className="text-base font-bold text-gray-800">{order.orderId}</h3>
+                        <p className="text-sm text-gray-600">{order.customer}</p>
+                        <p className="text-xs text-gray-400">{order.time}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-gray-800">MT {order.total.toFixed(2)}</p>
+                        <p className="text-xs text-gray-400">{order.items} items</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => handleConfirmOrder(order.id)}
+                      className="w-full bg-orange-500 text-white font-bold py-3 rounded-2xl hover:bg-orange-600 transition-colors"
+                    >
+                      Confirmar Pedido
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -466,7 +510,6 @@ export default function RestaurantOwnerDashboard() {
                 <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'serif' }}>
                   Em Preparação
                 </h2>
-                <button className="text-sm font-bold text-orange-500">Ver Todos</button>
               </div>
 
               <div className="space-y-3">
@@ -474,7 +517,7 @@ export default function RestaurantOwnerDashboard() {
                   <div key={order.id} className="bg-gray-50 rounded-3xl p-5 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <h3 className="text-base font-bold text-gray-800">#{order.orderId}</h3>
+                        <h3 className="text-base font-bold text-gray-800">{order.orderId}</h3>
                         <p className="text-sm text-gray-600">{order.customer}</p>
                       </div>
                       <div className="text-right">
@@ -513,7 +556,7 @@ export default function RestaurantOwnerDashboard() {
           {topProducts.length > 0 && (
             <div className="px-8 mb-6">
               <h2 className="text-lg font-bold text-gray-800 mb-4" style={{ fontFamily: 'serif' }}>
-                Produtos Mais Vendidos
+                Produtos Mais Vendidos Hoje
               </h2>
               
               <div className="bg-gray-800 rounded-3xl p-5 shadow-lg">
@@ -536,32 +579,6 @@ export default function RestaurantOwnerDashboard() {
               </div>
             </div>
           )}
-
-          {/* Quick Actions */}
-          <div className="px-8 mb-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-4" style={{ fontFamily: 'serif' }}>
-              Ações Rápidas
-            </h2>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <button className="bg-gray-50 rounded-2xl p-5 flex flex-col items-center justify-center space-y-2 shadow-sm hover:bg-gray-100 transition-colors">
-                <Package className="w-8 h-8 text-gray-800" />
-                <span className="text-sm font-bold text-gray-800">Cardápio</span>
-              </button>
-              <button className="bg-gray-50 rounded-2xl p-5 flex flex-col items-center justify-center space-y-2 shadow-sm hover:bg-gray-100 transition-colors">
-                <DollarSign className="w-8 h-8 text-gray-800" />
-                <span className="text-sm font-bold text-gray-800">Financeiro</span>
-              </button>
-              <button className="bg-gray-50 rounded-2xl p-5 flex flex-col items-center justify-center space-y-2 shadow-sm hover:bg-gray-100 transition-colors">
-                <Star className="w-8 h-8 text-gray-800" />
-                <span className="text-sm font-bold text-gray-800">Avaliações</span>
-              </button>
-              <button className="bg-gray-50 rounded-2xl p-5 flex flex-col items-center justify-center space-y-2 shadow-sm hover:bg-gray-100 transition-colors">
-                <TrendingUp className="w-8 h-8 text-gray-800" />
-                <span className="text-sm font-bold text-gray-800">Relatórios</span>
-              </button>
-            </div>
-          </div>
 
         </div>
       </div>

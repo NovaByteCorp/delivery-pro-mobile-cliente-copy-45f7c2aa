@@ -82,4 +82,5 @@ export const Product = createEntity('Product');
 export const Category = createEntity('Category');
 export const DeliveryPerson = createEntity('DeliveryPerson');
 export const Order = createEntity('Order');
+export const OrderItem = createEntity('OrderItem');
 export const Support = createEntity('Support');

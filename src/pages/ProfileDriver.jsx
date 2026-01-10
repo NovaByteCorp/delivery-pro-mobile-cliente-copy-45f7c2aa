@@ -1,28 +1,159 @@
-import React, { useState } from 'react';
-import { ChevronLeft, Star, TrendingUp, Award, User, Phone, Mail, MapPin, Bike, FileText, Settings, LogOut, ChevronRight, Camera } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, Star, TrendingUp, Award, User, Phone, Mail, MapPin, Bike, FileText, Settings, LogOut, ChevronRight, Camera, Loader2 } from 'lucide-react';
+import { supabase } from '@/supabase';
+
 import BottomNavDriver from '../components/driver/DriverBottomNav';
 
 export default function DriverProfileScreen() {
   const [showEditModal, setShowEditModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [driverInfo, setDriverInfo] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    phone: '',
+    email: ''
+  });
 
-  const driverInfo = {
-    name: 'Michael Johnson',
-    phone: '+258 84 123 4567',
-    email: 'michael.j@email.com',
-    rating: 4.9,
-    totalDeliveries: 1247,
-    memberSince: 'Jan 2024',
-    vehicle: {
-      type: 'Motocicleta',
-      model: 'Honda CB 125',
-      plate: 'MPM-1234'
-    },
-    stats: {
-      acceptance: 98,
-      onTime: 95,
-      completion: 99
+  useEffect(() => {
+    loadDriverData();
+  }, []);
+
+  const loadDriverData = async () => {
+    setLoading(true);
+    try {
+      const testUser = JSON.parse(localStorage.getItem('testUser') || '{}');
+      
+      if (!testUser.id) {
+        console.error('Usuário não encontrado');
+        setLoading(false);
+        return;
+      }
+
+      // Buscar dados do driver na tabela DeliveryPerson
+      const { data: driver, error } = await supabase
+        .from('DeliveryPerson')
+        .select('*')
+        .eq('user_id', testUser.id)
+        .single();
+
+      if (error) {
+        console.error('Erro ao buscar dados do driver:', error);
+        setLoading(false);
+        return;
+      }
+
+      if (!driver) {
+        console.error('Driver não encontrado');
+        setLoading(false);
+        return;
+      }
+
+      // Calcular estatísticas (pode ser expandido para buscar dados reais)
+      const stats = {
+        acceptance: 98,
+        onTime: 95,
+        completion: 99
+      };
+
+      // Formatar data de membro
+      const memberSince = driver.created_date ? 
+        new Date(driver.created_date).toLocaleDateString('pt-PT', { month: 'short', year: 'numeric' }) : 
+        'Jan 2024';
+
+      const driverData = {
+        id: driver.id,
+        userId: driver.user_id,
+        name: driver.name || 'Michael Johnson',
+        phone: driver.phone || '+258 84 123 4567',
+        email: driver.email || 'michael.j@email.com',
+        rating: driver.rating || 4.9,
+        totalDeliveries: Math.floor(driver.total_deliveries || 1247),
+        memberSince: memberSince,
+        profileImage: driver.profile_image_url,
+        vehicle: {
+          type: driver.vehicle_type || 'Motocicleta',
+          model: driver.vehicle_type ? `${driver.vehicle_type}` : 'Honda CB 125',
+          plate: driver.vehicle_plate || 'MPM-1234'
+        },
+        stats: stats,
+        address: driver.address,
+        documentNumber: driver.document_number,
+        isAvailable: driver.is_available,
+        isActive: driver.is_active
+      };
+
+      setDriverInfo(driverData);
+      setEditForm({
+        name: driverData.name,
+        phone: driverData.phone,
+        email: driverData.email
+      });
+
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleSaveProfile = async () => {
+    try {
+      const { error } = await supabase
+        .from('DeliveryPerson')
+        .update({
+          name: editForm.name,
+          phone: editForm.phone,
+          email: editForm.email,
+          updated_date: new Date().toISOString()
+        })
+        .eq('id', driverInfo.id);
+
+      if (error) throw error;
+
+      showToast('Perfil atualizado com sucesso!', 'success');
+      setShowEditModal(false);
+      await loadDriverData();
+
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      showToast('Erro ao atualizar perfil', 'error');
+    }
+  };
+
+  const showToast = (message, type = 'success') => {
+    const bgColor = type === 'success' ? 'bg-emerald-500' : 'bg-red-500';
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-20 left-4 right-4 z-[60] flex justify-center';
+    toast.innerHTML = `
+      <div class="${bgColor} text-white rounded-2xl shadow-2xl p-4 max-w-md w-full">
+        <p class="font-bold text-center">${message}</p>
+      </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
+          <p className="text-lg font-bold text-gray-800">Carregando perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!driverInfo) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Perfil não encontrado</h2>
+          <p className="text-gray-600">Entre em contato com o suporte.</p>
+        </div>
+      </div>
+    );
+  }
 
   const achievements = [
     { id: 1, title: 'Top Entregador', emoji: '🏆', description: '100 entregas' },
@@ -80,8 +211,12 @@ export default function DriverProfileScreen() {
             {/* Profile Picture */}
             <div className="flex justify-center mb-6">
               <div className="relative">
-                <div className="w-28 h-28 bg-gray-700 rounded-full flex items-center justify-center">
-                  <span className="text-5xl">👨‍🍳</span>
+                <div className="w-28 h-28 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                  {driverInfo.profileImage ? (
+                    <img src={driverInfo.profileImage} alt={driverInfo.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-5xl">👨‍🍳</span>
+                  )}
                 </div>
                 <button className="absolute bottom-0 right-0 w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
                   <Camera className="w-5 h-5 text-white" />
@@ -253,7 +388,8 @@ export default function DriverProfileScreen() {
                     <label className="text-xs font-bold text-gray-400 mb-2 block">NOME COMPLETO</label>
                     <input
                       type="text"
-                      defaultValue={driverInfo.name}
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({...editForm, name: e.target.value})}
                       className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm text-gray-800 outline-none border-2 border-gray-200 focus:border-orange-500"
                     />
                   </div>
@@ -262,7 +398,8 @@ export default function DriverProfileScreen() {
                     <label className="text-xs font-bold text-gray-400 mb-2 block">TELEFONE</label>
                     <input
                       type="tel"
-                      defaultValue={driverInfo.phone}
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
                       className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm text-gray-800 outline-none border-2 border-gray-200 focus:border-orange-500"
                     />
                   </div>
@@ -271,7 +408,8 @@ export default function DriverProfileScreen() {
                     <label className="text-xs font-bold text-gray-400 mb-2 block">EMAIL</label>
                     <input
                       type="email"
-                      defaultValue={driverInfo.email}
+                      value={editForm.email}
+                      onChange={(e) => setEditForm({...editForm, email: e.target.value})}
                       className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm text-gray-800 outline-none border-2 border-gray-200 focus:border-orange-500"
                     />
                   </div>
@@ -284,7 +422,10 @@ export default function DriverProfileScreen() {
                   >
                     Cancelar
                   </button>
-                  <button className="flex-1 bg-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg">
+                  <button 
+                    onClick={handleSaveProfile}
+                    className="flex-1 bg-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg"
+                  >
                     Salvar
                   </button>
                 </div>
@@ -294,7 +435,10 @@ export default function DriverProfileScreen() {
 
         </div>
       </div>
-      <BottomNavDriver activePage="ProfileDriver" />
+
+      {/* FUTURO: BottomNavDriver */}
+      {<BottomNavDriver activePage="ProfileDriver" /> }
+      
     </div>
   );
 }

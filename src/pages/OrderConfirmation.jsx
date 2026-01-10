@@ -1,31 +1,148 @@
-import React from 'react';
-import { CheckCircle, Star, MapPin, Clock, Phone } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, Star, MapPin, Clock, Phone, Loader2 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
+import { supabase } from '@/supabase';
 
 export default function OrderConfirmationScreen() {
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const navigate = (url) => {
     window.location.href = url;
   };
 
-  const order = {
-    id: 20241507,
-    items: [
-      { name: 'Beef Burger', quantity: 2, price: 7.99 },
-      { name: 'French Fries', quantity: 1, price: 3.99 },
-      { name: 'Chicken Burger', quantity: 3, price: 4.99 }
-    ],
-    subtotal: 30.95,
-    deliveryFee: 2.50,
-    tax: 3.10,
-    total: 36.55,
-    deliveryAddress: 'Av. Julius Nyerere, 123, Sommerschield, Maputo',
-    restaurant: {
-      name: 'Chillox Burger',
-      rating: 4.8,
-      type: 'Fast Food'
-    },
-    estimatedTime: '30-45'
+  useEffect(() => {
+    loadOrderData();
+  }, []);
+
+  const loadOrderData = async () => {
+    try {
+      setLoading(true);
+      
+      // Pega o order_id da URL ou do localStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get('order_id') || localStorage.getItem('last_order_id');
+      
+      if (!orderId) {
+        throw new Error('Nenhum pedido encontrado');
+      }
+
+      console.log('📥 Buscando pedido do Supabase:', orderId);
+
+      // 1. Busca o pedido
+      const { data: orderData, error: orderError } = await supabase
+        .from('Order')
+        .select('*')
+        .eq('id', orderId)
+        .single();
+
+      if (orderError) {
+        console.error('❌ Erro ao buscar pedido:', orderError);
+        throw new Error(`Pedido não encontrado: ${orderError.message}`);
+      }
+
+      console.log('✅ Pedido encontrado:', orderData);
+
+      // 2. Busca os itens do pedido
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('OrderItem')
+        .select('*')
+        .eq('order_id', orderId);
+
+      if (itemsError) {
+        console.error('❌ Erro ao buscar itens:', itemsError);
+      }
+
+      console.log('✅ Itens encontrados:', itemsData?.length || 0);
+
+      // 3. Busca dados do restaurante
+      let restaurantData = null;
+      if (orderData.restaurant_id) {
+        const { data: restaurant, error: restaurantError } = await supabase
+          .from('Restaurant')
+          .select('*')
+          .eq('id', orderData.restaurant_id)
+          .single();
+
+        if (!restaurantError) {
+          restaurantData = restaurant;
+          console.log('✅ Restaurante encontrado:', restaurant?.name);
+        }
+      }
+
+      // Monta o objeto completo do pedido
+      const completeOrder = {
+        id: orderData.order_number || orderData.id,
+        items: (itemsData || []).map(item => ({
+          name: item.product_name,
+          quantity: item.quantity,
+          price: parseFloat(item.unit_price),
+          image_url: item.image_url
+        })),
+        subtotal: parseFloat(orderData.subtotal || 0),
+        deliveryFee: parseFloat(orderData.delivery_fee || 0),
+        tax: parseFloat(orderData.tax || 0),
+        total: parseFloat(orderData.total_amount),
+        deliveryAddress: orderData.delivery_address || 'Endereço não especificado',
+        restaurant: {
+          name: restaurantData?.name || orderData.restaurant_name || 'Restaurante',
+          rating: restaurantData?.rating || 4.5,
+          type: restaurantData?.cuisine_type || 'Fast Food',
+          phone: restaurantData?.phone
+        },
+        estimatedTime: orderData.estimated_delivery_time || '30-45',
+        status: orderData.status
+      };
+
+      setOrder(completeOrder);
+      
+      // Limpa o carrinho após confirmar o pedido
+      localStorage.removeItem('cart');
+      window.dispatchEvent(new CustomEvent('cartUpdate'));
+      
+    } catch (err) {
+      console.error('❌ Erro ao carregar pedido:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="w-full max-w-md h-screen bg-white shadow-2xl flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 text-[#3c0068] animate-spin mx-auto mb-4" />
+            <p className="text-lg font-bold text-[#3c0068]">Carregando pedido...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="w-full max-w-md h-screen bg-white shadow-2xl flex items-center justify-center">
+          <div className="text-center px-8">
+            <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-5xl">❌</span>
+            </div>
+            <h2 className="text-2xl font-bold text-[#3c0068] mb-4">Erro ao Carregar</h2>
+            <p className="text-sm text-gray-400 mb-8">{error || 'Pedido não encontrado'}</p>
+            <button 
+              onClick={() => navigate(createPageUrl('ClientDashboard'))}
+              className="bg-[#ff4700] text-white font-bold px-8 py-4 rounded-2xl"
+            >
+              Voltar ao Início
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -68,7 +185,9 @@ export default function OrderConfirmationScreen() {
                 <div className="flex justify-center space-x-3">
                   <div className="bg-white rounded-2xl px-4 py-3 flex items-center space-x-2">
                     <span className="text-lg">🛵</span>
-                    <span className="text-sm font-bold text-[#3c0068]">Grátis</span>
+                    <span className="text-sm font-bold text-[#3c0068]">
+                      {order.deliveryFee === 0 ? 'Grátis' : `MT ${order.deliveryFee.toFixed(2)}`}
+                    </span>
                   </div>
                   <div className="bg-white rounded-2xl px-5 py-3 flex items-center space-x-2">
                     <span className="text-lg">⏰</span>
@@ -106,10 +225,15 @@ export default function OrderConfirmationScreen() {
                 </div>
               </div>
               
-              <button className="w-full bg-[#4d0083] rounded-2xl py-4 flex items-center justify-center space-x-2">
-                <Phone className="w-5 h-5 text-white" />
-                <span className="text-sm font-bold text-white">Ligar para Restaurante</span>
-              </button>
+              {order.restaurant.phone && (
+                <a 
+                  href={`tel:${order.restaurant.phone}`}
+                  className="w-full bg-[#4d0083] rounded-2xl py-4 flex items-center justify-center space-x-2"
+                >
+                  <Phone className="w-5 h-5 text-white" />
+                  <span className="text-sm font-bold text-white">Ligar para Restaurante</span>
+                </a>
+              )}
             </div>
 
             {/* Delivery Address */}
@@ -140,11 +264,23 @@ export default function OrderConfirmationScreen() {
             <div className="grid grid-cols-2 gap-4 mb-6">
               {order.items.map((item, idx) => (
                 <div key={idx} className="bg-[#3c0068] rounded-3xl overflow-hidden shadow-lg">
-                  <div className="relative h-24 bg-[#4d0083] flex items-center justify-center">
-                    <span className="text-4xl">🍔</span>
+                  <div className="relative h-24 bg-[#4d0083] flex items-center justify-center overflow-hidden">
+                    {item.image_url ? (
+                      <img 
+                        src={item.image_url} 
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.parentElement.innerHTML = '<span class="text-4xl">🍔</span>';
+                        }}
+                      />
+                    ) : (
+                      <span className="text-4xl">🍔</span>
+                    )}
                   </div>
                   <div className="p-4">
-                    <h3 className="text-white font-bold text-sm mb-1">{item.name}</h3>
+                    <h3 className="text-white font-bold text-sm mb-1 line-clamp-2">{item.name}</h3>
                     <p className="text-gray-300 text-xs mb-2">Qtd: {item.quantity}</p>
                     <span className="text-[#3c0068] font-bold bg-gray-50 px-3 py-1 rounded-xl text-sm inline-block">
                       MT {(item.price * item.quantity).toFixed(2)}

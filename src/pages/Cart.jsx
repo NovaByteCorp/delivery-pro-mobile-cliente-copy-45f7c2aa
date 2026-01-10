@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Plus, Minus, Trash2 } from 'lucide-react';
+import { ChevronLeft, Plus, Minus, Trash2, Loader2 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import BottomNav from '../components/client/BottomNav';
+import { supabase } from '@/supabase';
 
 export default function CartScreen() {
   const navigate = (url) => {
@@ -9,6 +10,8 @@ export default function CartScreen() {
   };
 
   const [cartItems, setCartItems] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const loadCart = () => {
@@ -49,6 +52,127 @@ export default function CartScreen() {
     window.dispatchEvent(new CustomEvent('cartUpdate'));
   };
 
+  const createOrder = async () => {
+    try {
+      setIsProcessing(true);
+      setError(null);
+
+      // Calcula os totais
+      const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const deliveryFee = 2.50;
+      const tax = subtotal * 0.1;
+      const total = subtotal + deliveryFee + tax;
+
+      // Pega o usuário do localStorage (conforme seu sistema de login)
+      const testUser = localStorage.getItem('testUser');
+      
+      if (!testUser) {
+        throw new Error('Você precisa estar logado para fazer um pedido. Por favor, faça login e tente novamente.');
+      }
+
+      const user = JSON.parse(testUser);
+      const userId = user.id;
+
+      if (!userId) {
+        throw new Error('Usuário inválido. Por favor, faça login novamente.');
+      }
+
+      console.log('👤 Usuário autenticado:', userId, user.full_name);
+
+      // Pega informações adicionais
+      const userAddress = user.address || 
+                         localStorage.getItem('delivery_address') || 
+                         localStorage.getItem('userAddress') || 
+                         'Av. Julius Nyerere, 123, Sommerschield, Maputo';
+      
+      // Pega o restaurant_id do primeiro item
+      const restaurantId = cartItems[0]?.restaurant_id || 
+                          cartItems[0]?.restaurantId || 
+                          cartItems[0]?.restaurant?.id;
+
+      if (!restaurantId) {
+        throw new Error('Restaurante não identificado. Verifique os itens do carrinho.');
+      }
+
+      console.log('🚀 Criando pedido no Supabase...');
+      console.log('📦 Dados:', { userId, restaurantId, total: total.toFixed(2) });
+
+      // 1. Cria o pedido na tabela Order
+      const orderData = {
+        user_id: userId,
+        restaurant_id: restaurantId,
+        status: 'pending',
+        subtotal: subtotal,
+        delivery_fee: deliveryFee,
+        total_amount: total,
+        delivery_address: userAddress,
+        payment_method: localStorage.getItem('payment_method') || 'cash',
+        payment_status: 'pending',
+        estimated_prep_time: 30,
+        notes: ''
+      };
+
+      console.log('📤 Enviando pedido:', orderData);
+
+      const { data: order, error: orderError } = await supabase
+        .from('Order')
+        .insert([orderData])
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error('❌ Erro ao criar pedido:', orderError);
+        console.error('❌ Detalhes:', orderError.details);
+        console.error('❌ Hint:', orderError.hint);
+        throw new Error(`Erro ao criar pedido: ${orderError.message}`);
+      }
+
+      console.log('✅ Pedido criado com ID:', order.id);
+
+      // 2. Cria os itens do pedido na tabela OrderItem
+      const orderItems = cartItems.map(item => ({
+        order_id: order.id,
+        product_id: item.id || item.product_id || item.productId,
+        product_name: item.name,
+        product_price: item.price,
+        quantity: item.quantity,
+        unit_price: item.price,
+        subtotal: item.price * item.quantity,
+        notes: item.removedIngredients?.length > 0 
+          ? `Sem: ${item.removedIngredients.join(', ')}` 
+          : (item.notes || '')
+      }));
+
+      console.log('📤 Enviando itens:', orderItems);
+
+      const { data: items, error: itemsError } = await supabase
+        .from('OrderItem')
+        .insert(orderItems)
+        .select();
+
+      if (itemsError) {
+        console.error('❌ Erro ao criar itens:', itemsError);
+        console.error('❌ Detalhes:', itemsError.details);
+        // Tenta deletar o pedido criado para manter consistência
+        await supabase.from('Order').delete().eq('id', order.id);
+        throw new Error(`Erro ao criar itens do pedido: ${itemsError.message}`);
+      }
+
+      console.log('✅ Itens criados:', items.length);
+
+      // Salva o order_id no localStorage
+      localStorage.setItem('last_order_id', order.id);
+
+      // Navega para a confirmação
+      navigate(createPageUrl('OrderConfirmation') + `?order_id=${order.id}`);
+
+    } catch (err) {
+      console.error('❌ Erro ao criar pedido:', err);
+      setError(err.message || 'Erro ao processar pedido. Tente novamente.');
+      setIsProcessing(false);
+    }
+  };
+
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const deliveryFee = 2.50;
   const tax = subtotal * 0.1;
@@ -64,6 +188,7 @@ export default function CartScreen() {
               <button
                 onClick={() => window.history.back()}
                 className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center"
+                disabled={isProcessing}
               >
                 <ChevronLeft className="w-6 h-6 text-[#3c0068]" />
               </button>
@@ -78,6 +203,14 @@ export default function CartScreen() {
 
           {/* Content */}
           <div className="mt-32 px-8">
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 bg-red-50 border border-red-200 rounded-2xl p-4">
+                <p className="text-sm text-red-600 text-center font-semibold mb-1">Erro</p>
+                <p className="text-xs text-red-500 text-center">{error}</p>
+              </div>
+            )}
+
             {cartItems.length > 0 ? (
               <>
                 {/* Cart Items */}
@@ -116,6 +249,7 @@ export default function CartScreen() {
                               <button
                                 onClick={() => updateQuantity(item.cartItemId, -1)}
                                 className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow"
+                                disabled={isProcessing}
                               >
                                 <Minus className="w-4 h-4 text-[#3c0068]" />
                               </button>
@@ -125,6 +259,7 @@ export default function CartScreen() {
                               <button
                                 onClick={() => updateQuantity(item.cartItemId, 1)}
                                 className="w-8 h-8 bg-[#ff4700] rounded-lg flex items-center justify-center shadow"
+                                disabled={isProcessing}
                               >
                                 <Plus className="w-4 h-4 text-white" />
                               </button>
@@ -136,12 +271,13 @@ export default function CartScreen() {
                         <button
                           onClick={() => removeItem(item.cartItemId)}
                           className="w-10 h-10 bg-white rounded-xl flex items-center justify-center self-start shadow flex-shrink-0"
+                          disabled={isProcessing}
                         >
                           <Trash2 className="w-5 h-5 text-red-500" />
                         </button>
                       </div>
 
-                     {/* Removed Ingredients */}
+                      {/* Removed Ingredients */}
                       {item.removedIngredients && item.removedIngredients.length > 0 && (
                         <div className="mt-3 pt-3 border-t border-gray-200">
                           <p className="text-xs text-gray-500 font-semibold mb-1">Sem:</p>
@@ -205,10 +341,20 @@ export default function CartScreen() {
           {cartItems.length > 0 && (
             <div className="fixed bottom-20 left-0 right-0 bg-white shadow-lg px-8 py-6">
               <button 
-                onClick={() => navigate(createPageUrl('OrderConfirmation'))} 
-                className="w-full bg-[#ff4700] text-white font-bold text-lg py-5 rounded-3xl shadow-lg"
+                onClick={createOrder}
+                disabled={isProcessing}
+                className={`w-full text-white font-bold text-lg py-5 rounded-3xl shadow-lg flex items-center justify-center space-x-2 ${
+                  isProcessing ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#ff4700]'
+                }`}
               >
-                Finalizar Pedido
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span>Processando...</span>
+                  </>
+                ) : (
+                  <span>Finalizar Pedido</span>
+                )}
               </button>
             </div>
           )}
