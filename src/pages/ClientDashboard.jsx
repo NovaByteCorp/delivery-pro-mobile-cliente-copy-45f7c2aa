@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import * as entities from "@/api/entities";
 import { createPageUrl } from "@/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
+import LanguageSelector from "@/components/LanguageSelector";
 import {
   MapPin,
   Bell,
@@ -28,6 +30,8 @@ export default function ClientDashboard() {
     prepTime: "all",
   });
   const [selectedCategory, setSelectedCategory] = useState("burger");
+
+  const { t } = useLanguage();
 
   // categorias fixas de fallback
   const defaultCategoryList = [
@@ -97,7 +101,7 @@ export default function ClientDashboard() {
       <div className="h-screen w-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#ff4700] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-base font-medium text-gray-600">Carregando...</p>
+          <p className="text-base font-medium text-gray-600">{t('loading')}</p>
         </div>
       </div>
     );
@@ -128,21 +132,27 @@ export default function ClientDashboard() {
             />
           </div>
 
-          <button
-            onClick={() => setShowNotifications(true)}
-            className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center relative"
-          >
-            <Bell className="w-6 h-6 text-[#3c0068]" />
-            <div className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full"></div>
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <LanguageSelector position="relative" />
+            </div>
+            
+            <button
+              onClick={() => setShowNotifications(true)}
+              className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center relative"
+            >
+              <Bell className="w-6 h-6 text-[#3c0068]" />
+              <div className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full"></div>
+            </button>
+          </div>
         </div>
 
         <h1
           className="text-2xl font-bold text-center mb-6"
           style={{ fontFamily: "serif" }}
         >
-          <span className="block text-[#ff4700]">Sempre Perto,</span>
-          <span className="block text-[#3c0068]">Sempre a Tempo</span>
+          <span className="block text-[#ff4700]">{t('alwaysClose')}</span>
+          <span className="block text-[#3c0068]">{t('alwaysOnTime')}</span>
         </h1>
 
         {/* Search Bar */}
@@ -150,7 +160,7 @@ export default function ClientDashboard() {
           <Search className="w-5 h-5 text-gray-400 absolute left-6" />
           <input
             type="text"
-            placeholder="Buscar comida"
+            placeholder={t('searchFood')}
             className="bg-transparent w-full pl-10 text-sm text-gray-400 outline-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -173,7 +183,7 @@ export default function ClientDashboard() {
           className="text-2xl font-bold mb-6 text-[#3c0068]"
           style={{ fontFamily: "serif" }}
         >
-          Categorias
+          {t('categories')}
         </h2>
         <div className="flex space-x-3 overflow-x-auto mb-8 pb-2 no-scrollbar">
           {(categories.length > 0 ? categories : defaultCategoryList).map(
@@ -213,7 +223,7 @@ export default function ClientDashboard() {
           className="text-lg font-bold mb-4 text-[#3c0068]"
           style={{ fontFamily: "serif" }}
         >
-          Popular
+          {t('popular')}
         </h2>
 
         <div className="space-y-5">
@@ -249,7 +259,7 @@ export default function ClientDashboard() {
                       </h3>
                       <div className="flex items-center space-x-2 mt-1">
                         <span className="text-xs text-gray-400 capitalize">
-                          {restaurant.cuisine_type || "Comida Rápida"}
+                          {restaurant.cuisine_type || t('fastFood')}
                         </span>
                         <div className="w-1 h-1 bg-gray-400 rounded-full" />
                         <span className="text-xs text-gray-400">

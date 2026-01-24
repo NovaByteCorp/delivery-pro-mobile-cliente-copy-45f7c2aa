@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Bell, Globe, Moon, Volume2, Shield, LogOut } from 'lucide-react';
 import { createPageUrl } from '@/utils';
+import { useLanguage } from '../contexts/LanguageContext';
+import LanguageSelector from '../components/LanguageSelector';
 import BottomNav from '../components/client/BottomNav';
 
 export default function ClientSettingsScreen() {
+  const { t, language } = useLanguage();
+  
   const navigate = (url) => {
     window.location.href = url;
   };
@@ -15,7 +19,6 @@ export default function ClientSettingsScreen() {
       newRestaurants: false,
       newsletter: true
     },
-    language: 'pt',
     darkMode: false,
     soundEffects: true
   });
@@ -38,11 +41,26 @@ export default function ClientSettingsScreen() {
   };
 
   const handleLogout = () => {
-    if (confirm('Tem certeza que deseja sair?')) {
+    if (confirm(t('confirmLogout'))) {
       localStorage.removeItem('testUser');
       localStorage.removeItem('simulatedRole');
       navigate(createPageUrl('Welcome'));
     }
+  };
+
+  // Mapear códigos de idioma para nomes exibidos
+  const getLanguageName = (code) => {
+    const languageNames = {
+      pt: 'Português',
+      en: 'English',
+      es: 'Español',
+      fr: 'Français',
+      de: 'Deutsch',
+      it: 'Italiano',
+      zh: '中文',
+      ja: '日本語'
+    };
+    return languageNames[code] || 'Português';
   };
 
   return (
@@ -61,7 +79,7 @@ export default function ClientSettingsScreen() {
               </button>
 
               <h1 className="text-2xl font-bold text-[#3c0068]" style={{ fontFamily: 'serif' }}>
-                Configurações
+                {t('settings')}
               </h1>
 
               <div className="w-14 h-14" />
@@ -73,7 +91,7 @@ export default function ClientSettingsScreen() {
             
             {/* Notifications Section */}
             <h2 className="text-lg font-bold mb-4 text-[#3c0068]" style={{ fontFamily: 'serif' }}>
-              Notificações
+              {t('notifications')}
             </h2>
 
             <div className="bg-gray-50 rounded-3xl p-5 mb-6 shadow-lg space-y-4">
@@ -83,8 +101,8 @@ export default function ClientSettingsScreen() {
                     <Bell className="w-5 h-5 text-[#3c0068]" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[#3c0068]">Atualizações de Pedido</h3>
-                    <p className="text-xs text-gray-500">Status do seu pedido</p>
+                    <h3 className="text-sm font-bold text-[#3c0068]">{t('orderUpdates')}</h3>
+                    <p className="text-xs text-gray-500">{t('orderStatus')}</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -104,8 +122,8 @@ export default function ClientSettingsScreen() {
                     <span className="text-xl">🎁</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[#3c0068]">Promoções</h3>
-                    <p className="text-xs text-gray-500">Ofertas especiais</p>
+                    <h3 className="text-sm font-bold text-[#3c0068]">{t('promotions')}</h3>
+                    <p className="text-xs text-gray-500">{t('specialOffers')}</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -125,8 +143,8 @@ export default function ClientSettingsScreen() {
                     <span className="text-xl">🍔</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[#3c0068]">Novos Restaurantes</h3>
-                    <p className="text-xs text-gray-500">Novidades na plataforma</p>
+                    <h3 className="text-sm font-bold text-[#3c0068]">{t('newRestaurants')}</h3>
+                    <p className="text-xs text-gray-500">{t('platformNews')}</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -146,8 +164,8 @@ export default function ClientSettingsScreen() {
                     <span className="text-xl">📧</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[#3c0068]">Newsletter</h3>
-                    <p className="text-xs text-gray-500">Novidades por email</p>
+                    <h3 className="text-sm font-bold text-[#3c0068]">{t('newsletter')}</h3>
+                    <p className="text-xs text-gray-500">{t('newsByEmail')}</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -164,22 +182,27 @@ export default function ClientSettingsScreen() {
 
             {/* Preferences Section */}
             <h2 className="text-lg font-bold mb-4 text-[#3c0068]" style={{ fontFamily: 'serif' }}>
-              Preferências
+              {t('preferences')}
             </h2>
 
             <div className="space-y-3 mb-6">
-              <button className="w-full bg-gray-50 rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                    <Globe className="w-5 h-5 text-[#3c0068]" />
+              {/* Language Selector - Abre o componente LanguageSelector */}
+              <div className="w-full bg-gray-50 rounded-2xl p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                      <Globe className="w-5 h-5 text-[#3c0068]" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-sm font-bold text-[#3c0068]">{t('language')}</h3>
+                      <p className="text-xs text-gray-500">{getLanguageName(language)}</p>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <h3 className="text-sm font-bold text-[#3c0068]">Idioma</h3>
-                    <p className="text-xs text-gray-500">Português</p>
+                  <div className="relative">
+                    <LanguageSelector position="relative" />
                   </div>
                 </div>
-                <ChevronLeft className="w-5 h-5 text-gray-400 rotate-180" />
-              </button>
+              </div>
 
               <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center space-x-3">
@@ -187,8 +210,8 @@ export default function ClientSettingsScreen() {
                     <Moon className="w-5 h-5 text-[#3c0068]" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[#3c0068]">Modo Escuro</h3>
-                    <p className="text-xs text-gray-500">Tema escuro</p>
+                    <h3 className="text-sm font-bold text-[#3c0068]">{t('darkMode')}</h3>
+                    <p className="text-xs text-gray-500">{t('darkTheme')}</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -208,8 +231,8 @@ export default function ClientSettingsScreen() {
                     <Volume2 className="w-5 h-5 text-[#3c0068]" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[#3c0068]">Efeitos Sonoros</h3>
-                    <p className="text-xs text-gray-500">Sons do app</p>
+                    <h3 className="text-sm font-bold text-[#3c0068]">{t('soundEffects')}</h3>
+                    <p className="text-xs text-gray-500">{t('appSounds')}</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -226,7 +249,7 @@ export default function ClientSettingsScreen() {
 
             {/* Security Section */}
             <h2 className="text-lg font-bold mb-4 text-[#3c0068]" style={{ fontFamily: 'serif' }}>
-              Segurança
+              {t('security')}
             </h2>
 
             <div className="space-y-3 mb-6">
@@ -239,8 +262,8 @@ export default function ClientSettingsScreen() {
                     <Shield className="w-5 h-5 text-[#3c0068]" />
                   </div>
                   <div className="text-left">
-                    <h3 className="text-sm font-bold text-[#3c0068]">Alterar Senha</h3>
-                    <p className="text-xs text-gray-500">Mude sua senha</p>
+                    <h3 className="text-sm font-bold text-[#3c0068]">{t('changePassword')}</h3>
+                    <p className="text-xs text-gray-500">{t('changeYourPassword')}</p>
                   </div>
                 </div>
                 <ChevronLeft className="w-5 h-5 text-gray-400 rotate-180" />
@@ -253,13 +276,13 @@ export default function ClientSettingsScreen() {
               className="w-full bg-gray-50 rounded-2xl p-4 flex items-center justify-center space-x-3 shadow-sm mb-6 hover:bg-red-50 transition-colors"
             >
               <LogOut className="w-5 h-5 text-red-600" />
-              <span className="text-base font-bold text-red-600">Sair da Conta</span>
+              <span className="text-base font-bold text-red-600">{t('logoutAccount')}</span>
             </button>
 
             {/* App Version */}
             <div className="text-center text-xs text-gray-400 pb-6">
               <p>ChegouDelivery v1.0.0</p>
-              <p className="mt-1">© 2024 Todos os direitos reservados</p>
+              <p className="mt-1">{t('allRightsReserved')}</p>
             </div>
 
           </div>
