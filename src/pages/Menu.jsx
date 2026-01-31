@@ -153,26 +153,6 @@ export default function Menu() {
     
     localStorage.setItem('cart', JSON.stringify(cart));
     window.dispatchEvent(new CustomEvent('cartUpdate'));
-    
-    const toast = document.createElement('div');
-    toast.className = 'fixed bottom-24 left-4 right-4 z-[60] flex justify-center animate-fade-in';
-    toast.innerHTML = `
-      <div class="bg-[#3c0068] text-white rounded-2xl shadow-2xl p-4 max-w-md w-full">
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-            <svg class="w-7 h-7 text-[#3c0068]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-          </div>
-          <div>
-            <p class="font-bold">Adicionado!</p>
-            <p class="text-sm opacity-90">${product.name}</p>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
   };
 
   const toggleFavorite = (productId, e) => {
