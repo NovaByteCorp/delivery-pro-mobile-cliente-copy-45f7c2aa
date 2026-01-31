@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import BottomNav from "../components/client/BottomNav";
-
+import FloatingCartButton from '../components/client/FloatingCartButton';
 import RestaurantSelector from "../components/menu/RestaurantSelector";
 import CategoryGrid from "../components/menu/CategoryGrid";
 import ProductGrid from "../components/menu/ProductGrid";
@@ -271,7 +271,7 @@ export default function Menu() {
         </div>
 
         {/* Menu Section */}
-        <div className="px-8 mt-6">
+        <div className="px-8 mt-6 pb-40">
           <h2 className="text-lg font-bold mb-4 text-[#3c0068]" style={{ fontFamily: 'serif' }}>
             Cardápio
           </h2>
@@ -356,6 +356,7 @@ export default function Menu() {
             </>
           )}
         </div>
+        <FloatingCartButton expanded={true} />
       </div>
     );
   }
