@@ -11,7 +11,7 @@ import {
   Star,
   ShoppingBag,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import FloatingCartButton from '../components/client/FloatingCartButton';
 import BottomNav from "../components/client/BottomNav";
 import FiltersModal from "../components/client/FiltersModal";
 
@@ -286,6 +286,7 @@ export default function ClientDashboard() {
         </div>
       </div>
 
+      <FloatingCartButton expanded={false} />
       <BottomNav activePage="ClientDashboard" />
       <FiltersModal
         show={showFilters}
