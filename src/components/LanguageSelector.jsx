@@ -15,15 +15,10 @@ const LanguageSelector = ({ position = "absolute" }) => {
   const { language, changeLanguage } = useLanguage();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
 
+  // ✅ APENAS PT e EN
   const languages = [
     { code: 'pt', name: 'Português', flag: '🇵🇹' },
-    { code: 'en', name: 'English', flag: 'EN' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-    { code: 'zh', name: '中文', flag: '🇨🇳' },
-    { code: 'ja', name: '日本語', flag: '🇯🇵' }
+    { code: 'en', name: 'English', flag: 'EN' }
   ];
 
   const handleLanguageChange = (langCode) => {
