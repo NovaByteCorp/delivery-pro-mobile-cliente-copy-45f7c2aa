@@ -151,10 +151,10 @@ export default function DriverEarningsScreen() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
-          <p className="text-lg font-bold text-gray-800">Carregando ganhos...</p>
+      <div className="h-screen w-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#ff4700] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-base font-medium text-gray-600">A carregar ganhos...</p>
         </div>
       </div>
     );
@@ -163,251 +163,235 @@ export default function DriverEarningsScreen() {
   const currentEarnings = earnings[selectedPeriod];
 
   return (
-    <div className="flex items-center justify-center min-h-screen pb-20 bg-gray-100">
-      <div className="w-full max-w-md h-screen bg-white shadow-2xl overflow-hidden">
-        <div className="relative w-full h-screen bg-white overflow-y-auto pb-8">
+    <div className="relative w-full min-h-screen bg-white overflow-y-auto pb-24">
+      
+      {/* Header Limpo */}
+      <div className="bg-white px-8 pt-12 pb-6">
+        <div className="flex items-center justify-between mb-6">
+          <button 
+            onClick={() => window.history.back()}
+            className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center active:bg-gray-100 transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5 text-[#3c0068]" />
+          </button>
           
-          {/* Header */}
-          <div className="bg-gray-800 px-8 pt-12 pb-32 rounded-b-3xl">
-            <div className="flex items-center justify-between mb-8">
-              <button 
-                onClick={() => window.history.back()}
-                className="w-14 h-14 bg-gray-700 rounded-2xl flex items-center justify-center"
-              >
-                <ChevronLeft className="w-6 h-6 text-white" />
-              </button>
-              
-              <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'serif' }}>
-                Meus Ganhos
-              </h1>
-              
-              <button className="w-14 h-14 bg-gray-700 rounded-2xl flex items-center justify-center">
-                <Download className="w-6 h-6 text-white" />
-              </button>
-            </div>
+          <h1 className="text-xl font-bold text-[#3c0068]" style={{ fontFamily: 'serif' }}>
+            Ganhos
+          </h1>
+          
+          <button className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center active:bg-gray-100 transition-colors">
+            <Download className="w-5 h-5 text-[#3c0068]" />
+          </button>
+        </div>
 
-            {/* Period Selector */}
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setSelectedPeriod('today')}
-                className={`flex-1 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
-                  selectedPeriod === 'today'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-gray-700 text-gray-300'
-                }`}
-              >
-                Hoje
-              </button>
-              <button
-                onClick={() => setSelectedPeriod('week')}
-                className={`flex-1 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
-                  selectedPeriod === 'week'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-gray-700 text-gray-300'
-                }`}
-              >
-                7 Dias
-              </button>
-              <button
-                onClick={() => setSelectedPeriod('month')}
-                className={`flex-1 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
-                  selectedPeriod === 'month'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-gray-700 text-gray-300'
-                }`}
-              >
-                30 Dias
-              </button>
-            </div>
-          </div>
+        {/* Period Selector */}
+        <div className="flex space-x-3 mb-6">
+          <button
+            onClick={() => setSelectedPeriod('today')}
+            className={`flex-1 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
+              selectedPeriod === 'today'
+                ? 'bg-[#ff4700] text-white'
+                : 'bg-gray-50 text-gray-400'
+            }`}
+          >
+            Hoje
+          </button>
+          <button
+            onClick={() => setSelectedPeriod('week')}
+            className={`flex-1 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
+              selectedPeriod === 'week'
+                ? 'bg-[#ff4700] text-white'
+                : 'bg-gray-50 text-gray-400'
+            }`}
+          >
+            7 Dias
+          </button>
+          <button
+            onClick={() => setSelectedPeriod('month')}
+            className={`flex-1 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
+              selectedPeriod === 'month'
+                ? 'bg-[#ff4700] text-white'
+                : 'bg-gray-50 text-gray-400'
+            }`}
+          >
+            30 Dias
+          </button>
+        </div>
 
-          {/* Total Card - Overlapping */}
-          <div className="relative px-8 -mt-20 mb-6">
-            <div className="bg-white rounded-3xl p-6 shadow-2xl">
-              <div className="text-center mb-6">
-                <p className="text-sm text-gray-400 mb-2">Total Ganho</p>
-                <h2 className="text-5xl font-bold text-gray-800 mb-1" style={{ fontFamily: 'serif' }}>
-                  MT {currentEarnings.total.toFixed(2)}
-                </h2>
-                {currentEarnings.deliveries > 0 && (
-                  <div className="flex items-center justify-center space-x-2 text-green-500">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="text-sm font-bold">{currentEarnings.deliveries} entregas realizadas</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-gray-50 rounded-2xl p-3 text-center">
-                  <Package className="w-5 h-5 text-orange-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-800 mb-1">{currentEarnings.deliveries}</p>
-                  <p className="text-xs text-gray-400">Entregas</p>
-                </div>
-                <div className="bg-gray-50 rounded-2xl p-3 text-center">
-                  <Clock className="w-5 h-5 text-blue-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-800 mb-1">{currentEarnings.hours}h</p>
-                  <p className="text-xs text-gray-400">Online</p>
-                </div>
-                <div className="bg-gray-50 rounded-2xl p-3 text-center">
-                  <DollarSign className="w-5 h-5 text-green-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-800 mb-1">
-                    {currentEarnings.deliveries > 0 
-                      ? (currentEarnings.total / currentEarnings.deliveries).toFixed(0) 
-                      : '0'}
-                  </p>
-                  <p className="text-xs text-gray-400">Média</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Breakdown */}
-          <div className="px-8 mb-6">
-            <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
-              Detalhamento
-            </h2>
-            
-            <div className="bg-gray-50 rounded-3xl p-5 shadow-sm">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
-                      <Package className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="text-sm font-bold text-gray-800">Entregas Base</span>
-                  </div>
-                  <span className="text-base font-bold text-gray-800">MT {currentEarnings.base.toFixed(2)}</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
-                      <DollarSign className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="text-sm font-bold text-gray-800">Gorjetas</span>
-                  </div>
-                  <span className="text-base font-bold text-green-500">
-                    {currentEarnings.tips > 0 ? '+' : ''}MT {currentEarnings.tips.toFixed(2)}
-                  </span>
-                </div>
-
-                <div className="border-t border-gray-200 pt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-base font-bold text-gray-800">Total</span>
-                    <span className="text-xl font-bold text-gray-800">MT {currentEarnings.total.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Withdraw Button */}
-          <div className="px-8 mb-6">
-            <button className="w-full bg-orange-500 text-white font-bold text-base py-5 rounded-3xl shadow-lg flex items-center justify-center space-x-2 hover:bg-orange-600 transition-colors">
-              <DollarSign className="w-5 h-5" />
-              <span>Solicitar Saque</span>
-            </button>
-          </div>
-
-          {/* Recent Deliveries */}
-          {recentDeliveries.length > 0 && (
-            <div className="px-8 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'serif' }}>
-                  Entregas Recentes
-                </h2>
-                <span className="text-sm font-bold text-orange-500">{recentDeliveries.length} entregas</span>
-              </div>
-
-              <div className="space-y-3">
-                {recentDeliveries.map((delivery) => (
-                  <div key={delivery.id} className="bg-gray-50 rounded-3xl p-4 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center">
-                          <span className="text-xl">{delivery.emoji}</span>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-bold text-gray-800">{delivery.restaurant}</h3>
-                          <p className="text-xs text-gray-400">{delivery.orderId}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-base font-bold text-gray-800">MT {delivery.amount.toFixed(2)}</p>
-                        {delivery.tip > 0 && (
-                          <p className="text-xs font-bold text-green-500">+MT {delivery.tip.toFixed(2)} gorjeta</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between bg-white rounded-2xl px-4 py-2">
-                      <div className="flex items-center space-x-4">
-                        <span className="text-xs text-gray-400">{delivery.date}</span>
-                        <span className="text-xs text-gray-400">{delivery.distance}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        {[...Array(5)].map((_, idx) => (
-                          <Star
-                            key={idx}
-                            className={`w-3 h-3 ${
-                              idx < delivery.rating
-                                ? 'fill-orange-500 text-orange-500'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* Total Ganho - Simples */}
+        <div className="text-center mb-6">
+          <p className="text-sm text-gray-400 mb-2">Total Ganho</p>
+          <h2 className="text-5xl font-bold text-[#3c0068] mb-3" style={{ fontFamily: 'serif' }}>
+            MT {currentEarnings.total.toFixed(2)}
+          </h2>
+          {currentEarnings.deliveries > 0 && (
+            <div className="flex items-center justify-center space-x-2 text-green-500">
+              <TrendingUp className="w-4 h-4" />
+              <span className="text-sm font-bold">{currentEarnings.deliveries} entregas</span>
             </div>
           )}
+        </div>
 
-          {/* Empty State */}
-          {recentDeliveries.length === 0 && (
-            <div className="px-8 mb-6">
-              <div className="bg-gray-50 rounded-3xl p-10 text-center">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package className="w-10 h-10 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-800 mb-2">Nenhuma Entrega Ainda</h3>
-                <p className="text-sm text-gray-400">
-                  Comece a fazer entregas para ver seus ganhos aqui
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Payment Methods */}
-          <div className="px-8 mb-6">
-            <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
-              Método de Recebimento
-            </h2>
-            
-            <button className="w-full bg-gray-50 rounded-3xl p-5 shadow-sm flex items-center justify-between hover:bg-gray-100 transition-colors">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center">
-                  <span className="text-xl">🏦</span>
-                </div>
-                <div className="text-left">
-                  <h3 className="text-base font-bold text-gray-800">
-                    {driver?.bank_name || 'Banco BCI'}
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    {driver?.bank_account ? `•••• ${driver.bank_account.slice(-4)}` : '•••• •••• •••• 4567'}
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-400" />
-            </button>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-gray-50 rounded-2xl p-4 text-center">
+            <Package className="w-5 h-5 text-[#ff4700] mx-auto mb-2" />
+            <p className="text-xl font-bold text-[#3c0068] mb-1">{currentEarnings.deliveries}</p>
+            <p className="text-xs text-gray-400">Entregas</p>
           </div>
-
-          <BottomNavDriver activePage="DriverEarnings" />
-
+          <div className="bg-gray-50 rounded-2xl p-4 text-center">
+            <Clock className="w-5 h-5 text-[#3c0068] mx-auto mb-2" />
+            <p className="text-xl font-bold text-[#3c0068] mb-1">{currentEarnings.hours}h</p>
+            <p className="text-xs text-gray-400">Online</p>
+          </div>
+          <div className="bg-gray-50 rounded-2xl p-4 text-center">
+            <DollarSign className="w-5 h-5 text-green-500 mx-auto mb-2" />
+            <p className="text-xl font-bold text-[#3c0068] mb-1">
+              {currentEarnings.deliveries > 0 
+                ? (currentEarnings.total / currentEarnings.deliveries).toFixed(0) 
+                : '0'}
+            </p>
+            <p className="text-xs text-gray-400">Média</p>
+          </div>
         </div>
       </div>
+
+      {/* Breakdown - Design Limpo */}
+      <div className="px-8 mb-6">
+        <h2 className="text-base font-bold mb-4 text-[#3c0068]">
+          Detalhamento
+        </h2>
+        
+        <div className="space-y-3">
+          <div className="flex justify-between items-center bg-gray-50 rounded-2xl px-5 py-4">
+            <div className="flex items-center space-x-3">
+              <Package className="w-5 h-5 text-[#ff4700]" />
+              <span className="text-sm font-bold text-[#3c0068]">Entregas Base</span>
+            </div>
+            <span className="text-base font-bold text-[#3c0068]">MT {currentEarnings.base.toFixed(2)}</span>
+          </div>
+
+          <div className="flex justify-between items-center bg-gray-50 rounded-2xl px-5 py-4">
+            <div className="flex items-center space-x-3">
+              <DollarSign className="w-5 h-5 text-green-500" />
+              <span className="text-sm font-bold text-[#3c0068]">Gorjetas</span>
+            </div>
+            <span className="text-base font-bold text-green-500">
+              {currentEarnings.tips > 0 ? '+' : ''}MT {currentEarnings.tips.toFixed(2)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Withdraw Button */}
+      <div className="px-8 mb-6">
+        <button className="w-full bg-[#ff4700] text-white font-bold text-base py-5 rounded-2xl shadow-lg flex items-center justify-center space-x-2 active:opacity-80 transition-opacity">
+          <DollarSign className="w-5 h-5" />
+          <span>Solicitar Saque</span>
+        </button>
+      </div>
+
+      {/* Recent Deliveries - Design Limpo */}
+      {recentDeliveries.length > 0 && (
+        <div className="px-8 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-bold text-[#3c0068]">
+              Entregas Recentes
+            </h2>
+            <span className="text-xs text-gray-400">
+              {recentDeliveries.length} entregas
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {recentDeliveries.map((delivery) => (
+              <div key={delivery.id} className="bg-gray-50 rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
+                      <span className="text-lg">{delivery.emoji}</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-[#3c0068]">{delivery.restaurant}</h3>
+                      <p className="text-xs text-gray-400">{delivery.orderId}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-[#3c0068]">MT {delivery.amount.toFixed(2)}</p>
+                    {delivery.tip > 0 && (
+                      <p className="text-xs font-bold text-green-500">+MT {delivery.tip.toFixed(2)}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <span className="text-xs text-gray-400">{delivery.date}</span>
+                    <span className="text-xs text-gray-400">•</span>
+                    <span className="text-xs text-gray-400">{delivery.distance}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    {[...Array(5)].map((_, idx) => (
+                      <Star
+                        key={idx}
+                        className={`w-3 h-3 ${
+                          idx < delivery.rating
+                            ? 'fill-[#ff4700] text-[#ff4700]'
+                            : 'fill-gray-200 text-gray-200'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty State - Design Limpo */}
+      {recentDeliveries.length === 0 && (
+        <div className="px-8 mb-6">
+          <div className="bg-gray-50 rounded-2xl p-12 text-center">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="w-10 h-10 text-gray-300" />
+            </div>
+            <h3 className="text-lg font-bold text-[#3c0068] mb-2">
+              Nenhuma Entrega Ainda
+            </h3>
+            <p className="text-sm text-gray-400">
+              Comece a fazer entregas para ver seus ganhos
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Methods - Design Limpo */}
+      <div className="px-8 mb-6">
+        <h2 className="text-base font-bold mb-4 text-[#3c0068]">
+          Conta Bancária
+        </h2>
+        
+        <button className="w-full bg-gray-50 rounded-2xl p-4 flex items-center justify-between active:bg-gray-100 transition-colors">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-[#3c0068] rounded-xl flex items-center justify-center">
+              <span className="text-lg">🏦</span>
+            </div>
+            <div className="text-left">
+              <h3 className="text-sm font-bold text-[#3c0068]">
+                {driver?.bank_name || 'Banco BCI'}
+              </h3>
+              <p className="text-xs text-gray-400">
+                {driver?.bank_account ? `•••• ${driver.bank_account.slice(-4)}` : '•••• •••• •••• 4567'}
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400" />
+        </button>
+      </div>
+
+      <BottomNavDriver activePage="DriverEarnings" />
+
     </div>
   );
 }
