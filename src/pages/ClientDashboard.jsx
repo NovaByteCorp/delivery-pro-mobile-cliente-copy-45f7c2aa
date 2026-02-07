@@ -286,7 +286,7 @@ export default function ClientDashboard() {
               className="cursor-pointer"
             >
               <div className="relative rounded-3xl overflow-hidden shadow-lg">
-                <div className="w-full h-56 bg-gray-200 relative">
+                <div className="relative w-full h-56 bg-gray-200">
                   <img
                     src={
                       restaurant.image_url ||
@@ -303,7 +303,7 @@ export default function ClientDashboard() {
                   {/* Botão de Favorito */}
                   <button 
                     onClick={(e) => toggleRestaurantFavorite(e, restaurant.id, restaurant.name)}
-                    className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg z-10 hover:scale-110 transition-transform"
+                    className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
                   >
                     <Heart 
                       className={`w-5 h-5 ${
