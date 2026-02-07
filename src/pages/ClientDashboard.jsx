@@ -10,6 +10,7 @@ import {
   SlidersHorizontal,
   Star,
   ShoppingBag,
+  Heart,
 } from "lucide-react";
 import FloatingCartButton from '../components/client/FloatingCartButton';
 import BottomNav from "../components/client/BottomNav";
@@ -30,6 +31,7 @@ export default function ClientDashboard() {
     prepTime: "all",
   });
   const [selectedCategory, setSelectedCategory] = useState("burger");
+  const [restaurantFavorites, setRestaurantFavorites] = useState([]);
 
   const { t } = useLanguage();
 
@@ -50,6 +52,10 @@ export default function ClientDashboard() {
         if (testUser) {
           setUser(JSON.parse(testUser));
         }
+
+        // Carregar favoritos de restaurantes
+        const favorites = JSON.parse(localStorage.getItem('restaurantFavorites') || '[]');
+        setRestaurantFavorites(favorites);
 
         // Buscar restaurantes
         const allRestaurantsData = await entities.Restaurant.getAll({
@@ -76,6 +82,50 @@ export default function ClientDashboard() {
 
   const navigate = (url) => {
     window.location.href = url;
+  };
+
+  const toggleRestaurantFavorite = (e, restaurantId, restaurantName) => {
+    e.stopPropagation(); // Prevenir navegação
+    
+    const favorites = JSON.parse(localStorage.getItem('restaurantFavorites') || '[]');
+    let newFavorites;
+    let isAdding = false;
+    
+    if (favorites.includes(restaurantId)) {
+      newFavorites = favorites.filter(id => id !== restaurantId);
+      setRestaurantFavorites(newFavorites);
+      isAdding = false;
+    } else {
+      newFavorites = [...favorites, restaurantId];
+      setRestaurantFavorites(newFavorites);
+      isAdding = true;
+    }
+    
+    localStorage.setItem('restaurantFavorites', JSON.stringify(newFavorites));
+    
+    // Show feedback message
+    const toast = document.createElement('div');
+    toast.className = 'fixed bottom-24 left-4 right-4 z-[60] flex justify-center animate-fade-in';
+    toast.innerHTML = `
+      <div class="bg-[#3c0068] text-white rounded-2xl shadow-2xl p-4 max-w-md w-full">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+            ${isAdding 
+              ? '<svg class="w-7 h-7 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>'
+              : '<svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>'
+            }
+          </div>
+          <div>
+            <p class="font-bold">${isAdding ? 'Adicionado aos favoritos!' : 'Removido dos favoritos'}</p>
+            <p class="text-sm opacity-90">${restaurantName}</p>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.remove();
+    }, 2000);
   };
 
   const handleApplyFilters = (newFilters) => {
@@ -236,7 +286,7 @@ export default function ClientDashboard() {
               className="cursor-pointer"
             >
               <div className="relative rounded-3xl overflow-hidden shadow-lg">
-                <div className="w-full h-56 bg-gray-200">
+                <div className="w-full h-56 bg-gray-200 relative">
                   <img
                     src={
                       restaurant.image_url ||
@@ -250,6 +300,19 @@ export default function ClientDashboard() {
                     }}
                     className="w-full h-full object-cover"
                   />
+                  {/* Botão de Favorito */}
+                  <button 
+                    onClick={(e) => toggleRestaurantFavorite(e, restaurant.id, restaurant.name)}
+                    className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg z-10 hover:scale-110 transition-transform"
+                  >
+                    <Heart 
+                      className={`w-5 h-5 ${
+                        restaurantFavorites.includes(restaurant.id)
+                          ? 'fill-red-500 text-red-500'
+                          : 'text-[#3c0068]'
+                      }`} 
+                    />
+                  </button>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-b-2xl">
                   <div className="flex justify-between items-start mb-2">
