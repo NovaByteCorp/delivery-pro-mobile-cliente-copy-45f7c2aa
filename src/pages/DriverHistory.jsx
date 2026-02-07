@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Star, MapPin, Clock, DollarSign, Calendar, Filter, Search, Loader2 } from 'lucide-react';
+import { ChevronLeft, Star, MapPin, Clock, DollarSign, Calendar, Filter, Search, Loader2, Package } from 'lucide-react';
 import BottomNavDriver from '../components/driver/DriverBottomNav';
 import { supabase } from '@/supabase';
 
@@ -210,10 +210,10 @@ export default function DriverHistoryScreen() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
-          <p className="text-lg font-bold text-gray-800">Carregando histórico...</p>
+      <div className="h-screen w-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#ff4700] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-base font-medium text-gray-600">A carregar histórico...</p>
         </div>
       </div>
     );
@@ -221,334 +221,326 @@ export default function DriverHistoryScreen() {
 
   const filteredDeliveries = getFilteredDeliveries();
 
+  // Detail View - Design Limpo
   if (selectedDelivery) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="w-full max-w-md min-h-screen bg-white shadow-2xl">
-          <div className="relative w-full bg-white pb-24 overflow-y-auto">
+      <div className="relative w-full min-h-screen bg-white overflow-y-auto pb-24">
+        
+        {/* Header Limpo */}
+        <div className="bg-white px-8 pt-12 pb-6 border-b border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <button 
+              onClick={() => setSelectedDelivery(null)}
+              className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center active:bg-gray-100 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5 text-[#3c0068]" />
+            </button>
             
-            {/* Header */}
-            <div className="bg-gray-800 px-8 pt-12 pb-8 rounded-b-3xl">
-              <div className="flex items-center justify-between mb-6">
-                <button 
-                  onClick={() => setSelectedDelivery(null)}
-                  className="w-14 h-14 bg-gray-700 rounded-2xl flex items-center justify-center"
-                >
-                  <ChevronLeft className="w-6 h-6 text-white" />
-                </button>
-                
-                <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'serif' }}>
-                  Detalhes da Entrega
-                </h1>
-                
-                <div className="w-14 h-14" />
-              </div>
+            <h1 className="text-xl font-bold text-[#3c0068]" style={{ fontFamily: 'serif' }}>
+              Detalhes
+            </h1>
+            
+            <div className="w-12 h-12" />
+          </div>
 
-              {/* Order ID */}
-              <div className="bg-gray-700 rounded-2xl px-4 py-3 text-center">
-                <p className="text-xs text-gray-400 mb-1">Pedido</p>
-                <p className="text-lg font-bold text-white">{selectedDelivery.orderId}</p>
+          {/* Order ID */}
+          <div className="text-center">
+            <p className="text-xs text-gray-400 mb-1">Pedido</p>
+            <p className="text-lg font-bold text-[#3c0068]">{selectedDelivery.orderId}</p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="px-8 mt-6">
+          
+          {/* Earnings - Destaque */}
+          <div className="text-center mb-6">
+            <p className="text-sm text-gray-400 mb-2">Ganho Total</p>
+            <p className="text-5xl font-bold text-[#3c0068] mb-3" style={{ fontFamily: 'serif' }}>
+              MT {(selectedDelivery.earnings + selectedDelivery.tip).toFixed(2)}
+            </p>
+            <div className="flex justify-center space-x-6">
+              <div>
+                <p className="text-xs text-gray-400">Base</p>
+                <p className="text-sm font-bold text-[#3c0068]">MT {selectedDelivery.earnings.toFixed(2)}</p>
               </div>
+              {selectedDelivery.tip > 0 && (
+                <div>
+                  <p className="text-xs text-gray-400">Gorjeta</p>
+                  <p className="text-sm font-bold text-green-500">MT {selectedDelivery.tip.toFixed(2)}</p>
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Content */}
-            <div className="px-8 -mt-6 mb-6">
-              
-              {/* Earnings Card */}
-              <div className="bg-white rounded-3xl p-6 shadow-lg mb-6">
-                <div className="text-center">
-                  <p className="text-sm text-gray-400 mb-2">Ganho Total</p>
-                  <p className="text-4xl font-bold text-green-500 mb-1" style={{ fontFamily: 'serif' }}>
-                    MT {(selectedDelivery.earnings + selectedDelivery.tip).toFixed(2)}
-                  </p>
-                  <div className="flex justify-center space-x-4 mt-4">
-                    <div className="text-center">
-                      <p className="text-xs text-gray-400">Base</p>
-                      <p className="text-sm font-bold text-gray-800">MT {selectedDelivery.earnings.toFixed(2)}</p>
-                    </div>
-                    {selectedDelivery.tip > 0 && (
-                      <>
-                        <div className="w-px h-10 bg-gray-200" />
-                        <div className="text-center">
-                          <p className="text-xs text-gray-400">Gorjeta</p>
-                          <p className="text-sm font-bold text-green-500">MT {selectedDelivery.tip.toFixed(2)}</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
+          {/* Rating */}
+          <div className="bg-gray-50 rounded-2xl p-5 mb-6 text-center">
+            <div className="flex justify-center space-x-1 mb-2">
+              {[...Array(5)].map((_, idx) => (
+                <Star
+                  key={idx}
+                  className={`w-6 h-6 ${
+                    idx < selectedDelivery.rating
+                      ? 'fill-[#ff4700] text-[#ff4700]'
+                      : 'fill-gray-200 text-gray-200'
+                  }`}
+                />
+              ))}
+            </div>
+            <p className="text-xl font-bold text-[#3c0068]">{selectedDelivery.rating}.0</p>
+            <p className="text-xs text-gray-400 mt-1">Avaliação do Cliente</p>
+          </div>
+
+          {/* Restaurant */}
+          <div className="mb-6">
+            <h2 className="text-base font-bold mb-3 text-[#3c0068]">
+              Restaurante
+            </h2>
+            
+            <div className="bg-gray-50 rounded-2xl p-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-[#3c0068] rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">{selectedDelivery.restaurant.emoji}</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-bold text-[#3c0068] mb-1">{selectedDelivery.restaurant.name}</h3>
+                  <p className="text-xs text-gray-400">{selectedDelivery.restaurant.address}</p>
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Rating */}
-              <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
-                Avaliação do Cliente
+          {/* Customer */}
+          <div className="mb-6">
+            <h2 className="text-base font-bold mb-3 text-[#3c0068]">
+              Cliente
+            </h2>
+            
+            <div className="bg-gray-50 rounded-2xl p-4">
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 bg-[#ff4700] rounded-xl flex items-center justify-center flex-shrink-0">
+                  <MapPin className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-bold text-[#3c0068] mb-1">{selectedDelivery.customer.name}</h3>
+                  <p className="text-xs text-gray-400">{selectedDelivery.customer.address}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Items */}
+          {selectedDelivery.items.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-base font-bold mb-3 text-[#3c0068]">
+                Items Entregues
               </h2>
               
-              <div className="bg-gray-50 rounded-3xl p-6 mb-6 shadow-sm text-center">
-                <div className="flex justify-center space-x-1 mb-2">
-                  {[...Array(5)].map((_, idx) => (
-                    <Star
-                      key={idx}
-                      className={`w-8 h-8 ${
-                        idx < selectedDelivery.rating
-                          ? 'fill-orange-500 text-orange-500'
-                          : 'text-gray-300'
-                      }`}
-                    />
+              <div className="bg-gray-50 rounded-2xl p-4">
+                <div className="space-y-2">
+                  {selectedDelivery.items.map((item, idx) => (
+                    <div key={idx} className="flex items-center space-x-2">
+                      <div className="w-1 h-1 bg-[#ff4700] rounded-full"></div>
+                      <p className="text-sm text-[#3c0068]">{item}</p>
+                    </div>
                   ))}
                 </div>
-                <p className="text-2xl font-bold text-gray-800">{selectedDelivery.rating}.0</p>
               </div>
-
-              {/* Restaurant */}
-              <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
-                Restaurante
-              </h2>
-              
-              <div className="bg-gray-800 rounded-3xl p-5 mb-6 shadow-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-14 h-14 bg-gray-700 rounded-xl flex items-center justify-center">
-                    <span className="text-3xl">{selectedDelivery.restaurant.emoji}</span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-white mb-1">{selectedDelivery.restaurant.name}</h3>
-                    <p className="text-sm text-gray-400">{selectedDelivery.restaurant.address}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Customer */}
-              <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
-                Cliente
-              </h2>
-              
-              <div className="bg-gray-50 rounded-3xl p-5 mb-6 shadow-sm">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-base font-bold text-gray-800 mb-1">{selectedDelivery.customer.name}</h3>
-                    <p className="text-sm text-gray-600">{selectedDelivery.customer.address}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Items */}
-              {selectedDelivery.items.length > 0 && (
-                <>
-                  <h2 className="text-lg font-bold mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
-                    Items Entregues
-                  </h2>
-                  
-                  <div className="bg-gray-50 rounded-3xl p-5 mb-6 shadow-sm">
-                    <div className="space-y-2">
-                      {selectedDelivery.items.map((item, idx) => (
-                        <p key={idx} className="text-sm text-gray-800">{item}</p>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-3 mb-8">
-                <div className="bg-gray-50 rounded-2xl p-4 text-center">
-                  <MapPin className="w-5 h-5 text-orange-500 mx-auto mb-2" />
-                  <p className="text-xs text-gray-400 mb-1">Distância</p>
-                  <p className="text-base font-bold text-gray-800">{selectedDelivery.distance}</p>
-                </div>
-                <div className="bg-gray-50 rounded-2xl p-4 text-center">
-                  <Clock className="w-5 h-5 text-blue-500 mx-auto mb-2" />
-                  <p className="text-xs text-gray-400 mb-1">Duração</p>
-                  <p className="text-base font-bold text-gray-800">{selectedDelivery.duration}</p>
-                </div>
-                <div className="bg-gray-50 rounded-2xl p-4 text-center">
-                  <Calendar className="w-5 h-5 text-gray-800 mx-auto mb-2" />
-                  <p className="text-xs text-gray-400 mb-1">Data</p>
-                  <p className="text-xs font-bold text-gray-800">{selectedDelivery.date}</p>
-                </div>
-              </div>
-
             </div>
+          )}
 
+          {/* Stats Grid */}
+          <div className="grid grid-cols-3 gap-3 mb-8">
+            <div className="bg-gray-50 rounded-2xl p-4 text-center">
+              <MapPin className="w-5 h-5 text-[#ff4700] mx-auto mb-2" />
+              <p className="text-xs text-gray-400 mb-1">Distância</p>
+              <p className="text-sm font-bold text-[#3c0068]">{selectedDelivery.distance}</p>
+            </div>
+            <div className="bg-gray-50 rounded-2xl p-4 text-center">
+              <Clock className="w-5 h-5 text-[#3c0068] mx-auto mb-2" />
+              <p className="text-xs text-gray-400 mb-1">Duração</p>
+              <p className="text-sm font-bold text-[#3c0068]">{selectedDelivery.duration}</p>
+            </div>
+            <div className="bg-gray-50 rounded-2xl p-4 text-center">
+              <Calendar className="w-5 h-5 text-[#3c0068] mx-auto mb-2" />
+              <p className="text-xs text-gray-400 mb-1">Data</p>
+              <p className="text-xs font-bold text-[#3c0068]">{selectedDelivery.date}</p>
+            </div>
           </div>
-          <BottomNavDriver activePage="DriverHistory" />
+
         </div>
+
+        <BottomNavDriver activePage="DriverHistory" />
       </div>
     );
   }
 
+  // List View - Design Limpo
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md min-h-screen bg-white shadow-2xl">
-        <div className="relative w-full bg-white pb-24">
+    <div className="relative w-full min-h-screen bg-white overflow-y-auto pb-24">
+      
+      {/* Header Limpo e Fixo */}
+      <div className="sticky top-0 bg-white z-10 px-8 pt-12 pb-4 border-b border-gray-100">
+        <div className="flex items-center justify-between mb-6">
+          <button 
+            onClick={() => window.history.back()}
+            className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center active:bg-gray-100 transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5 text-[#3c0068]" />
+          </button>
           
-          {/* Header */}
-          <div className="sticky top-0 bg-white z-10 px-8 pt-12 pb-4 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <button 
-                onClick={() => window.history.back()}
-                className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center"
-              >
-                <ChevronLeft className="w-6 h-6 text-gray-800" />
-              </button>
-              
-              <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: 'serif' }}>
-                Histórico
-              </h1>
-              
-              <button className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center">
-                <Filter className="w-6 h-6 text-gray-800" />
-              </button>
-            </div>
+          <h1 className="text-xl font-bold text-[#3c0068]" style={{ fontFamily: 'serif' }}>
+            Histórico
+          </h1>
+          
+          <div className="w-12 h-12" />
+        </div>
 
-            {/* Search Bar */}
-            <div className="relative bg-gray-50 rounded-2xl px-4 py-3 flex items-center mb-4">
-              <Search className="w-5 h-5 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Buscar por pedido ou restaurante" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent w-full pl-3 text-sm text-gray-800 outline-none placeholder-gray-400"
-              />
-            </div>
+        {/* Search Bar */}
+        <div className="relative bg-gray-50 rounded-2xl px-4 py-3 flex items-center mb-4">
+          <Search className="w-5 h-5 text-gray-400" />
+          <input 
+            type="text" 
+            placeholder="Buscar pedido ou restaurante" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-transparent w-full pl-3 text-sm text-[#3c0068] outline-none placeholder-gray-400"
+          />
+        </div>
 
-            {/* Filter Tabs */}
-            <div className="flex space-x-3 overflow-x-auto pb-2">
-              <button
-                onClick={() => setSelectedFilter('all')}
-                className={`flex-shrink-0 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
-                  selectedFilter === 'all'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-gray-50 text-gray-800'
-                }`}
-              >
-                Todas ({stats.all.count})
-              </button>
-              <button
-                onClick={() => setSelectedFilter('today')}
-                className={`flex-shrink-0 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
-                  selectedFilter === 'today'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-gray-50 text-gray-800'
-                }`}
-              >
-                Hoje ({stats.today.count})
-              </button>
-              <button
-                onClick={() => setSelectedFilter('week')}
-                className={`flex-shrink-0 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
-                  selectedFilter === 'week'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-gray-50 text-gray-800'
-                }`}
-              >
-                7 Dias ({stats.week.count})
-              </button>
-              <button
-                onClick={() => setSelectedFilter('month')}
-                className={`flex-shrink-0 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
-                  selectedFilter === 'month'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-gray-50 text-gray-800'
-                }`}
-              >
-                30 Dias ({stats.month.count})
-              </button>
-            </div>
-          </div>
+        {/* Filter Tabs */}
+        <div className="flex space-x-3 overflow-x-auto pb-2 no-scrollbar">
+          <button
+            onClick={() => setSelectedFilter('all')}
+            className={`flex-shrink-0 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
+              selectedFilter === 'all'
+                ? 'bg-[#ff4700] text-white'
+                : 'bg-gray-50 text-gray-400'
+            }`}
+          >
+            Todas ({stats.all.count})
+          </button>
+          <button
+            onClick={() => setSelectedFilter('today')}
+            className={`flex-shrink-0 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
+              selectedFilter === 'today'
+                ? 'bg-[#ff4700] text-white'
+                : 'bg-gray-50 text-gray-400'
+            }`}
+          >
+            Hoje ({stats.today.count})
+          </button>
+          <button
+            onClick={() => setSelectedFilter('week')}
+            className={`flex-shrink-0 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
+              selectedFilter === 'week'
+                ? 'bg-[#ff4700] text-white'
+                : 'bg-gray-50 text-gray-400'
+            }`}
+          >
+            7 Dias ({stats.week.count})
+          </button>
+          <button
+            onClick={() => setSelectedFilter('month')}
+            className={`flex-shrink-0 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
+              selectedFilter === 'month'
+                ? 'bg-[#ff4700] text-white'
+                : 'bg-gray-50 text-gray-400'
+            }`}
+          >
+            30 Dias ({stats.month.count})
+          </button>
+        </div>
+      </div>
 
-          {/* Content */}
-          <div className="px-8 mt-6">
-            
-            {/* Summary Card */}
-            <div className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-lg">
-              <div className="text-center">
-                <p className="text-sm text-gray-400 mb-2">Total do Período</p>
-                <p className="text-3xl font-bold text-white mb-1" style={{ fontFamily: 'serif' }}>
-                  MT {stats[selectedFilter].total.toFixed(2)}
-                </p>
-                <p className="text-sm text-gray-400">{stats[selectedFilter].count} entregas completadas</p>
-              </div>
-            </div>
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
 
-            {/* Deliveries List */}
-            {filteredDeliveries.length > 0 ? (
-              <div className="space-y-4 mb-8">
-                {filteredDeliveries.map((delivery) => (
-                  <div 
-                    key={delivery.id}
-                    onClick={() => setSelectedDelivery(delivery)}
-                    className="bg-gray-50 rounded-3xl p-5 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center">
-                          <span className="text-xl">{delivery.restaurant.emoji}</span>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-bold text-gray-800">{delivery.restaurant.name}</h3>
-                          <p className="text-xs text-gray-400">{delivery.orderId}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-base font-bold text-gray-800">MT {(delivery.earnings + delivery.tip).toFixed(2)}</p>
-                        {delivery.tip > 0 && (
-                          <p className="text-xs font-bold text-green-500">+{delivery.tip.toFixed(2)} gorjeta</p>
-                        )}
-                      </div>
+      {/* Content */}
+      <div className="px-8 mt-6">
+        
+        {/* Summary - Simples */}
+        <div className="text-center mb-6">
+          <p className="text-sm text-gray-400 mb-2">Total do Período</p>
+          <p className="text-4xl font-bold text-[#3c0068] mb-2" style={{ fontFamily: 'serif' }}>
+            MT {stats[selectedFilter].total.toFixed(2)}
+          </p>
+          <p className="text-sm text-gray-400">{stats[selectedFilter].count} entregas</p>
+        </div>
+
+        {/* Deliveries List */}
+        {filteredDeliveries.length > 0 ? (
+          <div className="space-y-3 mb-8">
+            {filteredDeliveries.map((delivery) => (
+              <div 
+                key={delivery.id}
+                onClick={() => setSelectedDelivery(delivery)}
+                className="bg-gray-50 rounded-2xl p-4 active:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
+                      <span className="text-lg">{delivery.restaurant.emoji}</span>
                     </div>
-
-                    <div className="bg-white rounded-2xl p-3 mb-3">
-                      <div className="flex items-center justify-between text-xs text-gray-600">
-                        <span>{delivery.date}</span>
-                        <span>{delivery.distance}</span>
-                        <span>{delivery.duration}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-1">
-                        {[...Array(5)].map((_, idx) => (
-                          <Star
-                            key={idx}
-                            className={`w-3 h-3 ${
-                              idx < delivery.rating
-                                ? 'fill-orange-500 text-orange-500'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-xs text-gray-400">{delivery.customer.name}</span>
+                    <div>
+                      <h3 className="text-sm font-bold text-[#3c0068]">{delivery.restaurant.name}</h3>
+                      <p className="text-xs text-gray-400">{delivery.orderId}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-32 h-32 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-                  <Clock className="w-16 h-16 text-gray-300" />
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-[#3c0068]">MT {(delivery.earnings + delivery.tip).toFixed(2)}</p>
+                    {delivery.tip > 0 && (
+                      <p className="text-xs font-bold text-green-500">+{delivery.tip.toFixed(2)}</p>
+                    )}
+                  </div>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'serif' }}>
-                  Nenhuma Entrega
-                </h2>
-                <p className="text-sm text-gray-400 text-center">
-                  {searchQuery 
-                    ? 'Nenhuma entrega encontrada com essa busca'
-                    : 'Não há entregas neste período'
-                  }
-                </p>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3 text-xs text-gray-400">
+                    <span>{delivery.date}</span>
+                    <span>•</span>
+                    <span>{delivery.distance}</span>
+                    <span>•</span>
+                    <span>{delivery.duration}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    {[...Array(5)].map((_, idx) => (
+                      <Star
+                        key={idx}
+                        className={`w-3 h-3 ${
+                          idx < delivery.rating
+                            ? 'fill-[#ff4700] text-[#ff4700]'
+                            : 'fill-gray-200 text-gray-200'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
-            )}
-
+            ))}
           </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+              <Package className="w-10 h-10 text-gray-300" />
+            </div>
+            <h2 className="text-lg font-bold text-[#3c0068] mb-2">
+              Nenhuma Entrega
+            </h2>
+            <p className="text-sm text-gray-400 text-center">
+              {searchQuery 
+                ? 'Nenhuma entrega encontrada'
+                : 'Não há entregas neste período'
+              }
+            </p>
+          </div>
+        )}
 
-        </div>
-        <BottomNavDriver activePage="DriverHistory" />
-      </div>     
+      </div>
+
+      <BottomNavDriver activePage="DriverHistory" />
     </div>
   );
 }
