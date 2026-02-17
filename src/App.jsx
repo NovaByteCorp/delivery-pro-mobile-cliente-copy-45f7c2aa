@@ -7,7 +7,14 @@ import SplashScreen from '@/components/SplashScreen'
 import logo from '@/assets/CD-white-logo.png' // ← ajuste o caminho do seu logo aqui
 
 function App() {
-  const [splashDone, setSplashDone] = useState(false)
+  const [splashDone, setSplashDone] = useState(
+    () => sessionStorage.getItem('splashShown') === 'true'
+  )
+
+  const handleSplashFinish = () => {
+    sessionStorage.setItem('splashShown', 'true')
+    setSplashDone(true)
+  }
 
   return (
     <LanguageProvider>
@@ -16,7 +23,7 @@ function App() {
           logo={logo}
           backgroundColor="#F97316"
           duration={2800}
-          onFinish={() => setSplashDone(true)}
+          onFinish={handleSplashFinish}
         />
       )}
       <Pages />
